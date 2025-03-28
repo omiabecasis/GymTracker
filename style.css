@@ -1,0 +1,153 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.schedule-container {
+    width: 90%; /* O un ancho fijo, ej: 800px */
+    margin: 20px auto; /* Centrar */
+}
+
+.schedule-bar {
+    display: flex; /* Organiza los segmentos en línea */
+    width: 100%;
+    height: 50px; /* Altura de la barra */
+    border: 1px solid #555;
+    border-radius: 5px;
+    overflow: hidden; /* Asegura que los bordes redondeados se apliquen */
+    background-color: #e0e0e0; /* Fondo por si hay huecos mínimos */
+}
+
+.activity-segment {
+    height: 100%;
+    box-sizing: border-box; /* Incluye borde en el tamaño */
+    border-right: 1px solid rgba(255, 255, 255, 0.5); /* Línea divisoria sutil */
+    cursor: help; /* Indica que hay info al pasar el ratón */
+    transition: filter 0.2s ease; /* Efecto suave al pasar el ratón */
+    display: flex; /* Para centrar texto si lo hubiera */
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.7em;
+    text-align: center;
+    overflow: hidden; /* Oculta texto si no cabe */
+}
+
+.activity-segment:last-child {
+    border-right: none; /* Quita borde al último */
+}
+
+.activity-segment:hover {
+    filter: brightness(1.15); /* Aclara un poco al pasar el ratón */
+}
+
+/* Colores para las actividades (¡puedes personalizarlos!) */
+.color-meal { background-color: #ffcc80; } /* Naranja claro para comidas */
+.color-cleaning { background-color: #81d4fa; } /* Azul claro para limpieza */
+.color-personal { background-color: #c5e1a5; } /* Verde claro para personal */
+.color-prep { background-color: #fff59d; } /* Amarillo para preparación */
+.color-training { background-color: #ef9a9a; } /* Rojo claro para entreno */
+.color-travel { background-color: #cfcfcf; } /* Gris para viajes/transición */
+.color-school { background-color: #9fa8da; } /* Morado claro para escuela */
+.color-sleep-prep { background-color: #bcaaa4; } /* Marrón claro para baño/fin */
+
+/* Estilo del Tooltip (descripción emergente) */
+.tooltip {
+    position: absolute; /* Posicionamiento absoluto respecto al body */
+    display: none; /* Oculto por defecto */
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: nowrap; /* Evita que el texto se parta en líneas */
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+    pointer-events: none; /* Evita que el tooltip interfiera con el ratón */
+}
+
+/* Etiquetas de hora */
+.schedule-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 5px auto 0; /* Espacio arriba */
+    padding: 0 5px; /* Pequeño padding para alinear mejor */
+    box-sizing: border-box;
+    font-size: 0.8em;
+    color: #555;
+}
+
+.schedule-labels span {
+   /* Cada span representa una marca de tiempo */
+   /* La distribución se hace con justify-content: space-between */
+}
+
+/* Ajuste para el primer y último label si es necesario */
+/* .schedule-labels span:first-child { text-align: left; } */
+/* .schedule-labels span:last-child { text-align: right; } */
+
+</style>
+/* --- ESTILOS PARA LA LEYENDA --- */
+.legend {
+    width: 90%; /* Mismo ancho que el container de la barra */
+    margin: 20px auto; /* Centrar y dar espacio arriba */
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: flex; /* Para poner items en línea */
+    flex-wrap: wrap; /* Permitir que pasen a la siguiente línea si no caben */
+    gap: 15px; /* Espacio entre items de la leyenda */
+    justify-content: center; /* Centrar los items si hay espacio extra */
+}
+
+.legend-title {
+    width: 100%; /* Ocupa toda la primera línea */
+    font-weight: bold;
+    margin-bottom: 5px; /* Espacio antes de los items */
+    color: #333;
+    text-align: center; /* Centrar el título */
+    font-size: 1.1em;
+}
+
+.legend-item {
+    display: flex; /* Alinear caja de color y texto */
+    align-items: center; /* Centrar verticalmente */
+    gap: 8px; /* Espacio entre caja de color y texto */
+}
+
+.legend-color {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #777; /* Borde sutil para la caja de color */
+    border-radius: 3px; /* Bordes redondeados */
+    flex-shrink: 0; /* Evita que la caja se encoja */
+}
+
+.legend-text {
+    font-size: 0.9em;
+    color: #444;
+}
+
+/* --- Reutilizamos los colores definidos antes --- */
+/* No es necesario redeclararlos si ya están en el CSS,
+   pero asegúrate de que las clases .color-* estén definidas globalmente
+   o cópialas aquí si no lo están */
+/* Ejemplo:
+.color-meal { background-color: #ffcc80; }
+.color-cleaning { background-color: #81d4fa; }
+.color-personal { background-color: #c5e1a5; }
+.color-prep { background-color: #fff59d; }
+.color-training { background-color: #ef9a9a; }
+.color-travel { background-color: #cfcfcf; }
+.color-school { background-color: #9fa8da; }
+.color-sleep-prep { background-color: #bcaaa4; }
+*/

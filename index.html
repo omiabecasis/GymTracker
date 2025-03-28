@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Rutina Diaria</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Mi Rutina Diaria (10:00 - 02:00)</h1>
+
+    <!-- Contenedor de la Barra y sus Etiquetas -->
+    <div class="schedule-container">
+        <div class="schedule-bar" id="scheduleBar">
+            <!-- Los segmentos se generan aquí con JavaScript -->
+        </div>
+        <div class="schedule-labels">
+             <span>10:00</span>
+             <span>12:00</span>
+             <span>14:00</span>
+             <span>16:00</span>
+             <span>18:00</span>
+             <span>20:00</span>
+             <span>22:00</span>
+             <span>00:00</span>
+             <span>02:00</span>
+        </div>
+    </div> <!-- FIN de schedule-container -->
+
+    <!-- Leyenda (Fuera y después del contenedor de la barra/etiquetas) -->
+    <div class="legend">
+        <div class="legend-title">Leyenda:</div>
+        <div class="legend-item">
+            <span class="legend-color color-meal"></span>
+            <span class="legend-text">Comidas / Preparación Comida</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-cleaning"></span>
+            <span class="legend-text">Limpieza</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-personal"></span>
+            <span class="legend-text">Tareas Personales</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-prep"></span>
+            <span class="legend-text">Preparación Salida</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-training"></span>
+            <span class="legend-text">Entrenamiento</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-travel"></span>
+            <span class="legend-text">Viaje / Transición</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color color-school"></span>
+            <span class="legend-text">Escuela</span>
+        </div>
+         <div class="legend-item">
+            <span class="legend-color color-sleep-prep"></span>
+            <span class="legend-text">Preparación Descanso (Baño)</span>
+        </div>
+    </div> <!-- FIN de legend -->
+
+    <!-- Tooltip (usualmente al final antes de script) -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
