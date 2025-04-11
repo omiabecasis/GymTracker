@@ -3,71 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Rutina Diaria</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Gym Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tag-input-container { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .tag { display: inline-flex; align-items: center; background-color: #e2e8f0; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.875rem; }
+        .tag-remove { margin-left: 0.25rem; cursor: pointer; }
+        .series-input { display: flex; flex-direction: column; gap: 0.5rem; }
+        .series-row { display: flex; gap: 0.5rem; align-items: center; }
+        .exercise-card:hover .exercise-actions { opacity: 1; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter, .fade-leave-to { opacity: 0; }
+        @media (max-width: 640px) {
+            .mobile-stack { flex-direction: column; align-items: stretch; }
+            .mobile-full { width: 100%; }
+            .mobile-button-group { width: 100%; display: flex; justify-content: space-between; margin-top: 0.5rem; gap: 0.5rem;}
+            .session-action-buttons { justify-content: flex-end; }
+        }
+        .filter-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        .filter-item:last-child { border-bottom: none; }
+        .session-action-buttons { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl" id="app">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div><h1 class="text-3xl font-bold text-indigo-700">Gym Tracker Pro</h1><p class="text-gray-600">Tu diario personal de entrenamiento</p></div>
+                <button @click="showMobileMenu = !showMobileMenu" class="md:hidden text-gray-600 hover:text-gray-800"><i class="fas fa-bars text-2xl"></i></button>
+            </div>
+            <!-- Mobile Menu -->
+            <div v-if="showMobileMenu" class="md:hidden mt-4 bg-white rounded-lg shadow p-4">
+                <button @click="currentTab = 'exercises'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'exercises', 'text-gray-700': currentTab !== 'exercises'}" class="w-full text-left px-4 py-2 rounded-md mb-2"><i class="fas fa-dumbbell mr-2"></i> Ejercicios</button>
+                <button @click="currentTab = 'sessions'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'sessions', 'text-gray-700': currentTab !== 'sessions'}" class="w-full text-left px-4 py-2 rounded-md mb-2"><i class="fas fa-running mr-2"></i> Sesiones</button>
+                <button @click="currentTab = 'history'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'history', 'text-gray-700': currentTab !== 'history'}" class="w-full text-left px-4 py-2 rounded-md"><i class="fas fa-history mr-2"></i> Historial</button>
+            </div>
+        </header>
 
-    <h1>Mi Rutina Diaria (10:00 - 02:00)</h1>
+        <!-- Navigation Tabs (Desktop) -->
+        <div class="hidden md:flex border-b border-gray-200 mb-6">
+            <button @click="currentTab = 'exercises'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'exercises', 'text-gray-500 hover:text-gray-700': currentTab !== 'exercises'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-dumbbell mr-2"></i> Biblioteca</button>
+            <button @click="currentTab = 'sessions'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'sessions', 'text-gray-500 hover:text-gray-700': currentTab !== 'sessions'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-running mr-2"></i> Sesiones</button>
+            <button @click="currentTab = 'history'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'history', 'text-gray-500 hover:text-gray-700': currentTab !== 'history'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-history mr-2"></i> Historial</button>
+        </div>
 
-    <!-- Contenedor de la Barra y sus Etiquetas -->
-    <div class="schedule-container">
-        <div class="schedule-bar" id="scheduleBar">
-            <!-- Los segmentos se generan aquí con JavaScript -->
+        <!-- Exercises Library -->
+        <div v-if="currentTab === 'exercises'" class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6 mobile-stack">
+                <h2 class="text-xl font-semibold text-gray-800"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> Biblioteca</h2>
+                <div class="flex space-x-2 mobile-button-group">
+                     <button @click="showManageFiltersModal = true" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center text-sm"><i class="fas fa-filter mr-2"></i> Filtros</button>
+                    <button @click="showExerciseForm = true; editingExercise = null; resetExerciseForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center text-sm"><i class="fas fa-plus mr-2"></i> Nuevo</button>
+                </div>
+            </div>
+            <!-- Search and Filters -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="relative"><input v-model="exerciseSearch" type="text" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i></div>
+                <select v-model="exerciseMuscleFilter" class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">Todos los grupos</option><option v-for="muscle in availableMuscleGroups" :key="muscle" :value="muscle">{{ muscle }}</option></select>
+                <select v-model="exerciseTypeFilter" class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">Todos los tipos</option><option v-for="type in availableExerciseTypes" :key="type" :value="type">{{ type }}</option></select>
+            </div>
+            <!-- Exercises List -->
+            <div v-if="filteredExercises.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-for="exercise in filteredExercises" :key="exercise.id" class="exercise-card border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow relative">
+                    <div class="exercise-actions absolute top-2 right-2 opacity-0 transition-opacity"><button @click="editExercise(exercise)" class="text-indigo-600 hover:text-indigo-800 mr-2" title="Editar"><i class="fas fa-edit"></i></button><button @click="deleteExercise(exercise.id)" class="text-red-600 hover:text-red-800" title="Eliminar"><i class="fas fa-trash"></i></button></div>
+                    <h3 class="font-semibold text-lg text-gray-800">{{ exercise.name }}</h3>
+                    <div class="flex flex-wrap gap-2 mt-2 mb-3"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ exercise.type || 'Sin tipo' }}</span><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ exercise.muscleGroup || 'Sin grupo' }}</span><span v-if="exercise.requiresWeight" class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Peso</span></div>
+                    <p class="text-gray-600 text-sm">{{ exercise.description || 'Sin descripción' }}</p>
+                </div>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500">No hay ejercicios.</div>
         </div>
-        <div class="schedule-labels">
-             <span>10:00</span>
-             <span>12:00</span>
-             <span>14:00</span>
-             <span>16:00</span>
-             <span>18:00</span>
-             <span>20:00</span>
-             <span>22:00</span>
-             <span>00:00</span>
-             <span>02:00</span>
-        </div>
-    </div> <!-- FIN de schedule-container -->
 
-    <!-- Leyenda (Fuera y después del contenedor de la barra/etiquetas) -->
-    <div class="legend">
-        <div class="legend-title">Leyenda:</div>
-        <div class="legend-item">
-            <span class="legend-color color-meal"></span>
-            <span class="legend-text">Comidas / Preparación Comida</span>
+        <!-- Exercise Form Modal -->
+        <div v-if="showExerciseForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800">{{ editingExercise ? 'Editar Ejercicio' : 'Nuevo Ejercicio' }}</h3><button @click="showExerciseForm = false" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label><input v-model="exerciseForm.name" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: Press de Banca"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label><textarea v-model="exerciseForm.description" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Notas..."></textarea></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label><div class="tag-input-container mb-2"><div v-for="(tag, index) in exerciseForm.typeTags" :key="`type-${index}`" class="tag">{{ tag }}<span @click="removeTypeTag(index)" class="tag-remove"><i class="fas fa-times"></i></span></div><input v-model="newTypeTag" @keydown.enter.prevent="addTypeTag" type="text" class="flex-1 border-0 border-b border-gray-300 focus:ring-0 focus:border-indigo-500 px-0 py-1 text-sm" placeholder="Añadir y Enter"><button @click.prevent="addTypeTag" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus"></i></button></div><select v-model="exerciseForm.type" class="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="" disabled>Selecciona o crea</option><option v-for="type in availableExerciseTypes" :key="type" :value="type">{{ type }}</option><option value="" v-if="!availableExerciseTypes.length" disabled>No hay tipos</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Grupo Muscular</label><div class="tag-input-container mb-2"><div v-for="(tag, index) in exerciseForm.muscleTags" :key="`muscle-${index}`" class="tag">{{ tag }}<span @click="removeMuscleTag(index)" class="tag-remove"><i class="fas fa-times"></i></span></div><input v-model="newMuscleTag" @keydown.enter.prevent="addMuscleTag" type="text" class="flex-1 border-0 border-b border-gray-300 focus:ring-0 focus:border-indigo-500 px-0 py-1 text-sm" placeholder="Añadir y Enter"><button @click.prevent="addMuscleTag" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus"></i></button></div><select v-model="exerciseForm.muscleGroup" class="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="" disabled>Selecciona o crea</option><option v-for="muscle in availableMuscleGroups" :key="muscle" :value="muscle">{{ muscle }}</option><option value="" v-if="!availableMuscleGroups.length" disabled>No hay grupos</option></select></div>
+                        <div class="flex items-center"><input v-model="exerciseForm.requiresWeight" type="checkbox" id="requiresWeight" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"><label for="requiresWeight" class="ml-2 block text-sm text-gray-700">Requiere peso</label></div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3"><button @click="showExerciseForm = false" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button><button @click="saveExercise" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700">Guardar</button></div>
+                </div>
+            </div>
         </div>
-        <div class="legend-item">
-            <span class="legend-color color-cleaning"></span>
-            <span class="legend-text">Limpieza</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color color-personal"></span>
-            <span class="legend-text">Tareas Personales</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color color-prep"></span>
-            <span class="legend-text">Preparación Salida</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color color-training"></span>
-            <span class="legend-text">Entrenamiento</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color color-travel"></span>
-            <span class="legend-text">Viaje / Transición</span>
-        </div>
-        <div class="legend-item">
-            <span class="legend-color color-school"></span>
-            <span class="legend-text">Escuela</span>
-        </div>
-         <div class="legend-item">
-            <span class="legend-color color-sleep-prep"></span>
-            <span class="legend-text">Preparación Descanso (Baño)</span>
-        </div>
-    </div> <!-- FIN de legend -->
 
-    <!-- Tooltip (usualmente al final antes de script) -->
-    <div class="tooltip" id="tooltip"></div>
+        <!-- Manage Filters Modal -->
+        <div v-if="showManageFiltersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-filter mr-2"></i> Gestionar Filtros</h3><button @click="showManageFiltersModal = false" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Tipos de Ejercicio</h4><div v-if="availableExerciseTypes.length > 0" class="space-y-1 max-h-60 overflow-y-auto pr-2"><div v-for="type in availableExerciseTypes" :key="`filter-type-${type}`" class="filter-item"><span class="text-sm">{{ type }}</span><button @click="deleteFilterOption('type', type)" class="text-red-500 hover:text-red-700" title="Eliminar"><i class="fas fa-trash-alt fa-xs"></i></button></div></div><p v-else class="text-sm text-gray-500 italic">No hay tipos.</p></div>
+                        <div><h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Grupos Musculares</h4><div v-if="availableMuscleGroups.length > 0" class="space-y-1 max-h-60 overflow-y-auto pr-2"><div v-for="muscle in availableMuscleGroups" :key="`filter-muscle-${muscle}`" class="filter-item"><span class="text-sm">{{ muscle }}</span><button @click="deleteFilterOption('muscle', muscle)" class="text-red-500 hover:text-red-700" title="Eliminar"><i class="fas fa-trash-alt fa-xs"></i></button></div></div><p v-else class="text-sm text-gray-500 italic">No hay grupos.</p></div>
+                    </div>
+                     <p class="mt-4 text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i> Eliminar desasignará la opción de los ejercicios.</p>
+                    <div class="mt-6 flex justify-end"><button @click="showManageFiltersModal = false" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700">Cerrar</button></div>
+                </div>
+            </div>
+        </div>
 
-    <script src="script.js"></script>
+        <!-- Training Sessions -->
+        <div v-if="currentTab === 'sessions'" class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6 mobile-stack">
+                <h2 class="text-xl font-semibold text-gray-800"><i :class="isEditingSession ? 'fas fa-edit' : 'fas fa-running'" class="mr-2 text-indigo-600"></i>{{ isEditingSession ? 'Editando Sesión' : 'Sesión Actual' }}</h2>
+                <button @click="startNewSession" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center mobile-full justify-center" :disabled="currentSession !== null" :class="{'opacity-50 cursor-not-allowed': currentSession !== null}"><i class="fas fa-plus mr-2"></i> Nueva Sesión</button>
+            </div>
+            <!-- Current Session (Creación o Edición) -->
+            <div v-if="currentSession" class="mb-8 border border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-4 mobile-stack">
+                    <h3 class="font-semibold text-lg text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i>Sesión del {{ formatDate(currentSession.date) }}</h3>
+                    <div class="mobile-button-group">
+                        <button @click="saveSession" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm mr-2"><i class="fas fa-save mr-1"></i> {{ isEditingSession ? 'Actualizar' : 'Guardar' }}</button>
+                        <button @click="cancelSession" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"><i class="fas fa-times mr-1"></i> Cancelar</button>
+                    </div>
+                </div>
+                <div class="mb-6"><label class="block text-sm font-medium text-gray-700 mb-2"><i class="fas fa-plus-circle mr-1 text-indigo-600"></i> Agregar ejercicio</label><div class="flex gap-2 mobile-stack"><select v-model="selectedExerciseToAdd" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 mobile-full"><option value="" disabled selected>Selecciona</option><option v-for="exercise in sortedExercises" :key="exercise.id" :value="exercise.id">{{ exercise.name }}</option></select><button @click="addExerciseToSession" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md mobile-full justify-center flex items-center" :disabled="!selectedExerciseToAdd" :class="{'opacity-50 cursor-not-allowed': !selectedExerciseToAdd}"><i class="fas fa-plus mr-2"></i> Agregar</button></div></div>
+                <div v-if="currentSession.exercises.length > 0" class="space-y-4">
+                    <div v-for="(sessionExercise, index) in currentSession.exercises" :key="sessionExercise.exerciseId + '-' + index" class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2"><h4 class="font-medium text-gray-800"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(sessionExercise.exerciseId).name }}</h4><button @click="removeExerciseFromSession(index)" class="text-red-600 hover:text-red-800" title="Quitar"><i class="fas fa-trash"></i></button></div>
+                        <div v-if="getExerciseById(sessionExercise.exerciseId).requiresWeight" class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-list-ol mr-1 text-indigo-600"></i> Series (reps x peso)</label>
+                            <div class="series-input"><div v-for="(set, setIndex) in sessionExercise.sets" :key="setIndex" class="series-row"><span class="text-sm text-gray-600 w-6">#{{ setIndex + 1 }}</span><input v-model.number="set.reps" type="number" min="1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Reps"><span class="text-gray-500">x</span><input v-model.number="set.weight" type="number" min="0" step="0.1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Kg"><button @click="removeSet(index, setIndex)" class="text-red-500 hover:text-red-700 ml-2" title="Eliminar"><i class="fas fa-times"></i></button></div></div>
+                            <button @click="addSet(index)" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm flex items-center"><i class="fas fa-plus mr-1"></i> Serie</button>
+                        </div>
+                        <div v-else class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-list-ol mr-1 text-indigo-600"></i> Series y reps</label>
+                            <div class="series-input"><div v-for="(set, setIndex) in sessionExercise.sets" :key="setIndex" class="series-row"><span class="text-sm text-gray-600 w-6">#{{ setIndex + 1 }}</span><input v-model.number="set.reps" type="number" min="1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Reps"><button @click="removeSet(index, setIndex)" class="text-red-500 hover:text-red-700 ml-2" title="Eliminar"><i class="fas fa-times"></i></button></div></div>
+                            <button @click="addSet(index)" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm flex items-center"><i class="fas fa-plus mr-1"></i> Serie</button>
+                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-sticky-note mr-1 text-indigo-600"></i> Notas</label><textarea v-model="sessionExercise.notes" rows="2" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="..."></textarea></div>
+                    </div>
+                </div>
+                <div v-else class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay ejercicios.</div>
+            </div>
+            <!-- Previous Sessions -->
+            <div v-if="sessions.length > 0 && !currentSession">
+                <h3 class="font-semibold text-lg text-gray-800 mb-4"><i class="fas fa-clock-rotate-left mr-2 text-indigo-600"></i> Sesiones recientes</h3>
+                <div class="space-y-4">
+                    <div v-for="session in sortedSessions.slice(0, 3)" :key="session.id" class="flex items-center gap-3">
+                        <div class="flex-grow border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer" @click="viewSessionDetails(session.id)">
+                            <div class="flex justify-between items-center"><span class="font-medium"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Sesión del {{ formatDate(session.date) }}</span><span class="text-sm text-gray-500">{{ session.exercises.length }} ej.</span></div>
+                        </div>
+                        <div class="session-action-buttons"><button @click.stop="editSession(session.id)" class="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-100" title="Editar"><i class="fas fa-edit fa-sm"></i></button><button @click.stop="deleteSession(session.id)" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100" title="Eliminar"><i class="fas fa-trash-alt fa-sm"></i></button></div>
+                    </div>
+                </div>
+                 <button v-if="sessions.length > 3" @click="currentTab = 'history'" class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm">Ver historial completo <i class="fas fa-arrow-right ml-1"></i></button>
+            </div>
+             <div v-if="sessions.length === 0 && !currentSession" class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay sesiones guardadas.</div>
+        </div>
+
+        <!-- Training History -->
+        <div v-if="currentTab === 'history'" class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6 mobile-stack"><h2 class="text-xl font-semibold text-gray-800"><i class="fas fa-history mr-2 text-indigo-600"></i> Historial</h2><div class="flex items-center space-x-2 mobile-full justify-end"><label for="historyFilter" class="text-sm text-gray-700">Filtrar:</label><select v-model="historyFilter" id="historyFilter" class="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="all">Todos</option><option value="last7">7 días</option><option value="last30">30 días</option></select></div></div>
+            <div v-if="filteredSessions.length > 0" class="space-y-4">
+                <div v-for="session in filteredSessions" :key="session.id" class="flex items-center gap-3">
+                    <div class="flex-grow border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" @click="viewSessionDetails(session.id)">
+                        <div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Sesión del {{ formatDate(session.date) }}</h3><span class="text-sm text-gray-500">{{ session.exercises.length }} ej.</span></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mt-3">
+                            <div v-for="exercise in session.exercises.slice(0, 4)" :key="exercise.exerciseId" class="text-sm"><p class="font-medium truncate" :title="getExerciseById(exercise.exerciseId).name"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(exercise.exerciseId).name }}</p><p class="text-gray-600 truncate">{{ exercise.sets.length }}x <span v-for="(set, index) in exercise.sets" :key="index">{{ set.reps }}{{ getExerciseById(exercise.exerciseId).requiresWeight && set.weight !== null ? `x${set.weight}kg` : '' }}{{ index < exercise.sets.length - 1 ? ', ' : '' }}</span></p></div>
+                             <div v-if="session.exercises.length > 4" class="text-sm text-gray-500 md:col-span-2">... y {{ session.exercises.length - 4 }} más</div>
+                        </div>
+                    </div>
+                    <div class="session-action-buttons"><button @click.stop="editSession(session.id)" class="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-100" title="Editar"><i class="fas fa-edit fa-sm"></i></button><button @click.stop="deleteSession(session.id)" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100" title="Eliminar"><i class="fas fa-trash-alt fa-sm"></i></button></div>
+                </div>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay sesiones.</div>
+        </div>
+
+        <!-- Session Details Modal -->
+        <div v-if="viewingSession" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Detalles Sesión {{ formatDate(viewingSession.date) }}</h3><button @click="viewingSession = null" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
+                    <div class="space-y-4">
+                        <div v-for="exercise in viewingSession.exercises" :key="exercise.exerciseId" class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-800 mb-2"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(exercise.exerciseId).name }}</h4>
+                            <div class="mb-3"><div class="flex flex-wrap gap-2 mb-2"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ getExerciseById(exercise.exerciseId).type || '-' }}</span><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ getExerciseById(exercise.exerciseId).muscleGroup || '-' }}</span><span v-if="getExerciseById(exercise.exerciseId).requiresWeight" class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Peso</span></div><div class="grid grid-cols-3 gap-2 text-sm font-medium text-gray-700 border-b pb-1 mb-1"><div>Serie</div><div>Reps</div><div v-if="getExerciseById(exercise.exerciseId).requiresWeight">Peso (kg)</div><div v-else></div></div><div v-for="(set, index) in exercise.sets" :key="index" class="grid grid-cols-3 gap-2 text-sm mt-1"><div class="text-gray-600">#{{ index + 1 }}</div><div class="text-gray-600">{{ set.reps ?? '-' }}</div><div v-if="getExerciseById(exercise.exerciseId).requiresWeight" class="text-gray-600">{{ set.weight ?? '-' }}</div><div v-else></div></div></div>
+                            <div v-if="exercise.notes" class="mt-2 pt-2 border-t"><p class="text-sm font-medium text-gray-700 mb-1"><i class="fas fa-sticky-note mr-1 text-indigo-600"></i> Notas:</p><p class="text-sm text-gray-600 whitespace-pre-wrap">{{ exercise.notes }}</p></div>
+                            <div v-else class="mt-2 pt-2 border-t"><p class="text-sm text-gray-500 italic">Sin notas.</p></div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end"><button @click="viewingSession = null" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700"><i class="fas fa-times mr-1"></i> Cerrar</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        let defaultExerciseTypes = ['Fuerza', 'Cardio', 'Flexibilidad', 'Hipertrofia', 'Resistencia'];
+        let defaultMuscleGroups = ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Piernas', 'Glúteos', 'Abdomen', 'Full Body'];
+        const savedDefaultTypes = localStorage.getItem('gymTrackerDefaultTypes');
+        const savedDefaultMuscles = localStorage.getItem('gymTrackerDefaultMuscles');
+        if (savedDefaultTypes) defaultExerciseTypes = JSON.parse(savedDefaultTypes);
+        if (savedDefaultMuscles) defaultMuscleGroups = JSON.parse(savedDefaultMuscles);
+
+        createApp({
+            setup() {
+                const currentTab = ref('exercises');
+                const exercises = ref([]);
+                const sessions = ref([]);
+                const currentSession = ref(null);
+                const viewingSession = ref(null);
+                const showExerciseForm = ref(false);
+                const showManageFiltersModal = ref(false);
+                const editingExercise = ref(null);
+                const selectedExerciseToAdd = ref('');
+                const exerciseSearch = ref('');
+                const exerciseMuscleFilter = ref('');
+                const exerciseTypeFilter = ref('');
+                const newTypeTag = ref('');
+                const newMuscleTag = ref('');
+                const historyFilter = ref('all');
+                const showMobileMenu = ref(false);
+                const availableExerciseTypes = ref([...defaultExerciseTypes]);
+                const availableMuscleGroups = ref([...defaultMuscleGroups]);
+                const initialExerciseForm = { id: null, name: '', description: '', type: '', typeTags: [], muscleGroup: '', muscleTags: [], requiresWeight: false };
+                const exerciseForm = ref({ ...initialExerciseForm });
+
+                const loadData = () => { /* ... (igual) ... */ const sDT=localStorage.getItem('gymTrackerDefaultTypes'); const sDM=localStorage.getItem('gymTrackerDefaultMuscles'); if(sDT)defaultExerciseTypes=JSON.parse(sDT); if(sDM)defaultMuscleGroups=JSON.parse(sDM); const sE=localStorage.getItem('gymTrackerExercises'); const sS=localStorage.getItem('gymTrackerSessions'); if(sE)exercises.value=JSON.parse(sE); if(sS)sessions.value=JSON.parse(sS).map(s=>({...s, date:new Date(s.date)})); if(exercises.value.length===0&&!sE)initializeSampleExercises(); if(sessions.value.length===0&&!sS)initializeSampleSessions(); sortSessions(); updateFilterOptions(); };
+                const saveData = () => { /* ... (igual) ... */ localStorage.setItem('gymTrackerExercises',JSON.stringify(exercises.value)); localStorage.setItem('gymTrackerSessions',JSON.stringify(sessions.value)); localStorage.setItem('gymTrackerDefaultTypes',JSON.stringify(defaultExerciseTypes)); localStorage.setItem('gymTrackerDefaultMuscles',JSON.stringify(defaultMuscleGroups)); };
+                const initializeSampleExercises = () => { /* ... (igual) ... */ exercises.value=[{id:'1',name:'Press Banca',type:'Fuerza',muscleGroup:'Pecho',requiresWeight:true},{id:'2',name:'Sentadilla',type:'Hipertrofia',muscleGroup:'Piernas',requiresWeight:true},{id:'3',name:'Dominadas',type:'Fuerza',muscleGroup:'Espalda',requiresWeight:false},{id:'4',name:'Curl Bíceps',type:'Hipertrofia',muscleGroup:'Bíceps',requiresWeight:true},{id:'5',name:'Plancha',type:'Resistencia',muscleGroup:'Abdomen',requiresWeight:false}]; };
+                const initializeSampleSessions = () => { /* ... (igual) ... */ sessions.value=[{id:'s1',date:new Date(Date.now()-2*864e5),exercises:[{exerciseId:'1',sets:[{reps:10,weight:60},{reps:8,weight:65}],notes:'Ok'},{exerciseId:'4',sets:[{reps:12,weight:12}],notes:''}]},{id:'s2',date:new Date(Date.now()-5*864e5),exercises:[{exerciseId:'2',sets:[{reps:12,weight:70}],notes:''},{exerciseId:'3',sets:[{reps:8}],notes:''}]}]; };
+                const updateFilterOptions = () => { /* ... (igual) ... */ const uT=[...new Set(exercises.value.map(e=>e.type).filter(Boolean))]; const uM=[...new Set(exercises.value.map(e=>e.muscleGroup).filter(Boolean))]; availableExerciseTypes.value=[...new Set([...defaultExerciseTypes,...uT])].sort(); availableMuscleGroups.value=[...new Set([...defaultMuscleGroups,...uM])].sort(); };
+
+                const filteredExercises = computed(() => exercises.value.filter(ex => (ex.name.toLowerCase().includes(exerciseSearch.value.toLowerCase()) || ex.description?.toLowerCase().includes(exerciseSearch.value.toLowerCase())) && (!exerciseMuscleFilter.value || ex.muscleGroup === exerciseMuscleFilter.value) && (!exerciseTypeFilter.value || ex.type === exerciseTypeFilter.value)).sort((a, b) => a.name.localeCompare(b.name)));
+                const sortedExercises = computed(() => [...exercises.value].sort((a, b) => a.name.localeCompare(b.name)));
+                const sortedSessions = computed(() => [...sessions.value].sort((a, b) => new Date(b.date) - new Date(a.date)));
+                const filteredSessions = computed(() => { const n=new Date(); let c; const b=sortedSessions.value; switch(historyFilter.value){ case 'last7': c=new Date(n.getTime()-7*864e5); return b.filter(s=>new Date(s.date)>=c); case 'last30': c=new Date(n.getTime()-30*864e5); return b.filter(s=>new Date(s.date)>=c); default: return b; } });
+                const isEditingSession = computed(() => currentSession.value !== null && sessions.value.some(s => s.id === currentSession.value.id));
+
+                const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+                const formatDate = (date) => { if (!date) return ''; const d = typeof date === 'string' ? new Date(date) : date; return isNaN(d) ? '' : d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); };
+                const getExerciseById = (id) => exercises.value.find(ex => ex.id === id) || { id: null, name: 'Ejercicio no encontrado', type: '', muscleGroup: '', requiresWeight: false };
+
+                const resetExerciseForm = () => { /* ... (igual) ... */ exerciseForm.value={...initialExerciseForm, typeTags:[], muscleTags:[]}; newTypeTag.value=''; newMuscleTag.value=''; };
+                const editExercise = (exercise) => { /* ... (igual) ... */ editingExercise.value=exercise; exerciseForm.value={id:exercise.id, name:exercise.name, description:exercise.description||'', type:exercise.type||'', typeTags:exercise.type?[exercise.type]:[], muscleGroup:exercise.muscleGroup||'', muscleTags:exercise.muscleGroup?[exercise.muscleGroup]:[], requiresWeight:exercise.requiresWeight}; newTypeTag.value=''; newMuscleTag.value=''; showExerciseForm.value=true; };
+                const deleteExercise = (id) => { const name=getExerciseById(id)?.name||''; if(confirm(`¿Eliminar "${name}"?`)){ const used=sessions.value.some(s=>s.exercises.some(e=>e.exerciseId===id)); if(used&&!confirm(`"${name}" se usa en sesiones. ¿Eliminar igual?`))return; exercises.value=exercises.value.filter(e=>e.id!==id); saveData(); updateFilterOptions(); /* ALERTA QUITADA */ } };
+                const saveExercise = () => { if(!exerciseForm.value.name.trim()){alert('Nombre?');return;} if(!exerciseForm.value.type){alert('Tipo?');return;} if(!exerciseForm.value.muscleGroup){alert('Grupo?');return;} const ex={id:editingExercise.value?editingExercise.value.id:generateId(), name:exerciseForm.value.name.trim(), description:exerciseForm.value.description.trim(), type:exerciseForm.value.type, muscleGroup:exerciseForm.value.muscleGroup, requiresWeight:exerciseForm.value.requiresWeight}; if(editingExercise.value){const i=exercises.value.findIndex(e=>e.id===editingExercise.value.id); if(i!==-1)exercises.value.splice(i,1,ex);}else exercises.value.push(ex); showExerciseForm.value=false; editingExercise.value=null; resetExerciseForm(); saveData(); updateFilterOptions(); /* ALERTA QUITADA */ };
+                const addTypeTag = () => { /* ... (igual) ... */ const t=newTypeTag.value.trim(); if(t&&!exerciseForm.value.typeTags.includes(t)){ exerciseForm.value.typeTags.push(t); if(!availableExerciseTypes.value.includes(t)){availableExerciseTypes.value.push(t); availableExerciseTypes.value.sort();} exerciseForm.value.type=t; newTypeTag.value='';} else if(t){exerciseForm.value.type=t; newTypeTag.value='';} };
+                const removeTypeTag = (index) => { /* ... (igual) ... */ const r=exerciseForm.value.typeTags[index]; exerciseForm.value.typeTags.splice(index,1); if(exerciseForm.value.type===r)exerciseForm.value.type=''; };
+                const addMuscleTag = () => { /* ... (igual) ... */ const t=newMuscleTag.value.trim(); if(t&&!exerciseForm.value.muscleTags.includes(t)){ exerciseForm.value.muscleTags.push(t); if(!availableMuscleGroups.value.includes(t)){availableMuscleGroups.value.push(t); availableMuscleGroups.value.sort();} exerciseForm.value.muscleGroup=t; newMuscleTag.value='';} else if(t){exerciseForm.value.muscleGroup=t; newMuscleTag.value='';} };
+                const removeMuscleTag = (index) => { /* ... (igual) ... */ const r=exerciseForm.value.muscleTags[index]; exerciseForm.value.muscleTags.splice(index,1); if(exerciseForm.value.muscleGroup===r)exerciseForm.value.muscleGroup=''; };
+
+                const sortSessions = () => { sessions.value.sort((a, b) => new Date(b.date) - new Date(a.date)); };
+                const startNewSession = () => { currentSession.value = { id: generateId(), date: new Date(), exercises: [] }; selectedExerciseToAdd.value = ''; };
+                const editSession = (sessionId) => { const sessionToEdit = sessions.value.find(s => s.id === sessionId); if (sessionToEdit) { currentSession.value = JSON.parse(JSON.stringify(sessionToEdit)); currentSession.value.date = new Date(currentSession.value.date); currentTab.value = 'sessions'; selectedExerciseToAdd.value = ''; window.scrollTo(0, 0); } else { alert("Error: Sesión no encontrada."); } };
+                const saveSession = () => {
+                    if (!currentSession.value || currentSession.value.exercises.length === 0) { alert('Añade ejercicios.'); return; }
+                    let valid = true; /* ... validación ... */ if (!valid) return;
+                    const sessionDataToSave = currentSession.value;
+                    const editing = isEditingSession.value;
+                    if (editing) {
+                        const index = sessions.value.findIndex(s => s.id === sessionDataToSave.id);
+                        if (index !== -1) { sessions.value.splice(index, 1, sessionDataToSave); /* ALERTA QUITADA */ }
+                        else { alert('Error al actualizar.'); return; }
+                    } else {
+                        sessions.value.unshift(sessionDataToSave); /* ALERTA QUITADA */
+                    }
+                    sortSessions(); currentSession.value = null; saveData();
+                };
+                const cancelSession = () => { const msg=isEditingSession.value?'¿Descartar cambios?':'¿Cancelar nueva sesión?'; if(confirm(msg)) currentSession.value = null; };
+                const deleteSession = (sessionId) => { const date=formatDate(sessions.value.find(s=>s.id===sessionId)?.date); if(confirm(`¿Eliminar sesión del ${date}?`)){ sessions.value=sessions.value.filter(s=>s.id!==sessionId); saveData(); /* ALERTA QUITADA */ if(viewingSession.value?.id===sessionId)viewingSession.value=null; } };
+                const addExerciseToSession = () => { /* ... (igual) ... */ if(!selectedExerciseToAdd.value)return; const ex=getExerciseById(selectedExerciseToAdd.value); if(!ex?.id)return; currentSession.value.exercises.push({exerciseId:ex.id, sets:[{reps:null, weight:ex.requiresWeight?null:null}], notes:''}); selectedExerciseToAdd.value=''; };
+                const removeExerciseFromSession = (index) => { /* ... (igual) ... */ if(confirm(`¿Quitar "${getExerciseById(currentSession.value.exercises[index].exerciseId).name}"?`))currentSession.value.exercises.splice(index,1); };
+                const addSet = (exIndex) => { /* ... (igual) ... */ const ex=getExerciseById(currentSession.value.exercises[exIndex].exerciseId); currentSession.value.exercises[exIndex].sets.push({reps:null, weight:ex.requiresWeight?null:null}); };
+                const removeSet = (exIndex, setIndex) => { /* ... (igual) ... */ if(currentSession.value.exercises[exIndex].sets.length>1)currentSession.value.exercises[exIndex].sets.splice(setIndex,1); else alert("No puedes eliminar la única serie."); };
+                const viewSessionDetails = (sessionId) => { /* ... (igual) ... */ viewingSession.value = sessions.value.find(s => s.id === sessionId) || null; };
+
+                const deleteFilterOption = (filterType, value) => { const list=filterType==='type'?availableExerciseTypes:availableMuscleGroups; const defaultList=filterType==='type'?defaultExerciseTypes:defaultMuscleGroups; const field=filterType==='type'?'type':'muscleGroup'; const typeName=filterType==='type'?'tipo':'grupo'; if(list.value.length<=1){alert(`No puedes eliminar el último ${typeName}.`); return;} if(confirm(`¿Eliminar ${typeName} "${value}"?\nSe desasignará de los ejercicios.`)){ exercises.value=exercises.value.map(ex=>{if(ex[field]===value)return{...ex,[field]:''}; return ex;}); list.value=list.value.filter(item=>item!==value); const defaultIndex=defaultList.indexOf(value); if(defaultIndex>-1)defaultList.splice(defaultIndex,1); if(filterType==='type'&&exerciseTypeFilter.value===value)exerciseTypeFilter.value=''; if(filterType==='muscle'&&exerciseMuscleFilter.value===value)exerciseMuscleFilter.value=''; if(showExerciseForm.value&&exerciseForm.value[field]===value)exerciseForm.value[field]=''; saveData(); /* ALERTA QUITADA */ } };
+
+                onMounted(loadData);
+                watch(availableExerciseTypes, (newList) => { if (exerciseTypeFilter.value && !newList.includes(exerciseTypeFilter.value)) exerciseTypeFilter.value = ''; });
+                watch(availableMuscleGroups, (newList) => { if (exerciseMuscleFilter.value && !newList.includes(exerciseMuscleFilter.value)) exerciseMuscleFilter.value = ''; });
+
+                return {
+                    currentTab, exercises, sessions, currentSession, viewingSession, showExerciseForm, showManageFiltersModal,
+                    editingExercise, selectedExerciseToAdd, exerciseSearch, exerciseMuscleFilter, exerciseTypeFilter,
+                    availableExerciseTypes, availableMuscleGroups, exerciseForm, newTypeTag, newMuscleTag, historyFilter, showMobileMenu,
+                    filteredExercises, sortedExercises, sortedSessions, filteredSessions, isEditingSession,
+                    formatDate, getExerciseById, resetExerciseForm, editExercise, deleteExercise, saveExercise,
+                    addTypeTag, removeTypeTag, addMuscleTag, removeMuscleTag, startNewSession, saveSession,
+                    cancelSession, deleteSession, editSession,
+                    addExerciseToSession, removeExerciseFromSession, addSet, removeSet,
+                    viewSessionDetails, updateFilterOptions, deleteFilterOption
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
