@@ -192,4 +192,103 @@
                 }
             };
             
-            const renderCategories = () =>
+            const renderCategories = () => {
+                categoryNav.innerHTML = '';
+                categories.forEach(category => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#" class="block px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150 sidebar-item ${category === activeCategory ? 'active' : 'text-gray-600 hover:bg-gray-200'}">${category}</a>`;
+                    li.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        activeCategory = category;
+                        searchBar.value = '';
+                        renderCategories();
+                        renderCommands();
+                        // Cierra el menú en móvil al seleccionar una categoría
+                        if (!sidebar.classList.contains('md:relative')) {
+                           toggleSidebar();
+                        }
+                    });
+                    categoryNav.appendChild(li);
+                });
+            };
+
+            const renderCommands = () => {
+                const searchTerm = searchBar.value.toLowerCase();
+                let filteredCommands;
+
+                if (searchTerm) {
+                    filteredCommands = arduinoCommands.filter(cmd => 
+                        cmd.name.toLowerCase().includes(searchTerm) ||
+                        cmd.explanation.toLowerCase().includes(searchTerm) ||
+                        cmd.exampleExplanation.toLowerCase().includes(searchTerm)
+                    );
+                } else if (activeCategory === "⭐ Favoritos") {
+                    filteredCommands = arduinoCommands.filter(cmd => favorites.has(cmd.name));
+                } else {
+                    filteredCommands = arduinoCommands.filter(cmd => cmd.category === activeCategory);
+                }
+
+                commandsContainer.innerHTML = '';
+                if (filteredCommands.length === 0) {
+                    commandsContainer.innerHTML = `<div class="text-center py-12 px-4 bg-white rounded-lg card-shadow md:col-span-2 xl:col-span-3">
+                        <h3 class="text-xl font-semibold text-gray-700">No se encontraron resultados</h3>
+                        <p class="text-gray-500 mt-2">Intenta con otra búsqueda o añade comandos a tus favoritos.</p>
+                    </div>`;
+                    return;
+                }
+
+                filteredCommands.forEach(cmd => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg p-6 card-shadow flex flex-col';
+                    const isFavorited = favorites.has(cmd.name);
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-xl font-bold text-gray-800 fira-code pr-4">${cmd.name}</h3>
+                            <div class="flex space-x-2 shrink-0">
+                                <button class="action-btn copy-btn" title="Copiar boceto de código">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                </button>
+                                <button class="action-btn favorite-btn" title="Añadir/Quitar de favoritos">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 icon-favorite ${isFavorited ? 'favorited' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69L11.049 2.927z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm">${cmd.explanation}</p>
+                        <div class="mt-4 flex-grow flex flex-col">
+                            <p class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Ejemplo de Uso:</p>
+                            <pre class="bg-gray-800 text-white p-4 rounded-md text-sm fira-code overflow-x-auto flex-grow">${cmd.example}</pre>
+                        </div>
+                        <div class="mt-4 bg-[#F8F4F0] p-4 rounded-md">
+                            <p class="text-xs font-semibold text-[#A35709] mb-2 uppercase tracking-wider">¿Qué hace el ejemplo?</p>
+                            <p class="text-sm text-gray-700">${cmd.exampleExplanation}</p>
+                        </div>
+                    `;
+                    
+                    const copyBtn = card.querySelector('.copy-btn');
+                    const favoriteBtn = card.querySelector('.favorite-btn');
+
+                    copyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        copyCodeToClipboard(cmd.sketch, copyBtn);
+                    });
+                    favoriteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFavorite(cmd, favoriteBtn);
+                    });
+
+                    commandsContainer.appendChild(card);
+                });
+            };
+
+            searchBar.addEventListener('input', () => {
+                renderCommands();
+            });
+
+            renderCategories();
+            renderCommands();
+        });
+    </script>
+</body>
+</html>
+
