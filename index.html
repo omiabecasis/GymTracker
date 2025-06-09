@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía Interactiva de Comandos de Arduino v2 (Copia Mejorada)</title>
+    <title>Guía de Arduino (Responsiva)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -15,26 +15,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap');
         .fira-code {
             font-family: 'Fira Code', monospace;
-        }
-        #sidebar-wrapper {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            z-index: 40;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-        }
-        #sidebar-wrapper.show {
-            transform: translateX(0);
-        }
-        #sidebar-open-hotspot {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 20px;
-            height: 100%;
-            z-index: 30;
         }
         .sidebar-item.active {
             background-color: #EBE6E0;
@@ -66,83 +46,81 @@
     </style>
 </head>
 <body class="antialiased">
-    
-    <div id="sidebar-open-hotspot"></div>
-    
-    <div id="sidebar-wrapper">
-        <aside class="w-64 bg-[#F8F4F0] p-6 border-r border-gray-200 h-full overflow-y-auto">
-            <h1 class="text-2xl font-bold text-[#A35709] mb-8">Arduino<span class="font-light">DevRef</span></h1>
+
+    <!-- Contenedor principal que gestiona el layout responsivo -->
+    <div class="relative min-h-screen md:flex">
+        
+        <!-- Superposición de fondo para el menú móvil (se oculta en escritorio) -->
+        <div id="sidebar-overlay" class="hidden md:hidden fixed inset-0 bg-black/60 z-30"></div>
+
+        <!-- Panel lateral (Sidebar). Se comporta diferente en móvil y escritorio -->
+        <aside id="sidebar-wrapper" class="bg-[#F8F4F0] text-gray-800 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-40">
+            <h1 class="text-2xl font-bold text-[#A35709] mb-8 px-4">Arduino<span class="font-light">DevRef</span></h1>
             <nav id="category-nav">
-                <h2 class="text-xs font-bold uppercase text-gray-500 mb-3">Categorías</h2>
+                <h2 class="text-xs font-bold uppercase text-gray-500 mb-3 px-4">Categorías</h2>
                 <ul class="space-y-2">
-                    </ul>
+                    <!-- Las categorías se insertan aquí con JS -->
+                </ul>
             </nav>
         </aside>
-    </div>
 
-    <main class="flex-1 p-4 md:p-8 lg:p-10 transition-all duration-300">
-        <div class="max-w-7xl mx-auto">
-            <header class="mb-8">
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Guía de Comandos</h2>
-                <p class="text-gray-500 mt-2">Una referencia interactiva para Arduino. Pasa el cursor por el borde izquierdo para ver las categorías.</p>
+        <!-- Contenido principal -->
+        <main class="flex-1 p-4 md:p-8 lg:p-10">
+            <div class="max-w-7xl mx-auto">
+                <header class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Guía de Comandos</h2>
+                        <p class="text-gray-500 mt-2">Una referencia interactiva para Arduino.</p>
+                    </div>
+                     <!-- Botón de Menú (Hamburguesa) - Visible solo en móviles (se oculta en escritorio con md:hidden) -->
+                    <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                         <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </header>
+
                 <div class="mt-6 relative">
                     <input type="text" id="search-bar" placeholder="Busca por nombre o describe lo que quieres hacer..." class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white transition-shadow duration-200 search-bar">
                     <svg class="w-5 h-5 text-gray-400 absolute top-1/2 right-4 transform -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-            </header>
 
-            <div id="commands-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div id="commands-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
                 </div>
-        </div>
-    </main>
+            </div>
+        </main>
+    </div>
 
     <script>
         const arduinoCommands = [
-            // Estructura Básica
+            // El array de objetos 'arduinoCommands' permanece aquí, sin cambios.
+            // ... (Se omite por brevedad, es el mismo array de la versión anterior)
             { name: "void setup()", category: "Estructura Básica", explanation: "Función que se ejecuta una sola vez al inicio del programa. Se usa para inicializar variables, configurar pines y empezar a usar librerías.", example: "void setup() {\n  Serial.begin(9600);\n  pinMode(13, OUTPUT);\n}", sketch: "void setup() {\n  // tu código de configuración aquí\n}", exampleExplanation: "Inicia la comunicación serie a 9600 baudios y configura el pin digital 13 como una salida." },
             { name: "void loop()", category: "Estructura Básica", explanation: "Función que se ejecuta continuamente después de `setup()`. Es el corazón del programa, donde se aloja la lógica principal.", example: "void loop() {\n  digitalWrite(13, HIGH);\n  delay(1000);\n  digitalWrite(13, LOW);\n  delay(1000);\n}", sketch: "void loop() {\n  // tu código principal aquí\n}", exampleExplanation: "Enciende el LED del pin 13, espera 1 segundo, lo apaga, espera otro segundo y repite el ciclo." },
             { name: "#include", category: "Estructura Básica", explanation: "Directiva que se usa para incluir librerías externas en tu sketch, como la de un sensor específico o para controlar un motor.", example: "#include <Servo.h>", sketch: "#include <Libreria.h>", exampleExplanation: "Incluye la librería `Servo.h`, necesaria para controlar servomotores." },
             { name: "#define", category: "Estructura Básica", explanation: "Directiva que permite definir constantes. El compilador reemplazará cualquier mención de esta constante por el valor definido.", example: "#define LED_PIN 13", sketch: "#define NOMBRE_CONSTANTE valor", exampleExplanation: "Define una constante llamada `LED_PIN` con el valor 13. En el código, `LED_PIN` será reemplazado por 13." },
-            
-            // Estructuras de Control
             { name: "if...else", category: "Estructuras de Control", explanation: "Ejecuta un bloque de código si la condición es verdadera (`true`), y otro bloque si es falsa (`false`).", example: "if (x > 10) {\n  // bloque de código A\n} else {\n  // bloque de código B\n}", sketch: "if (condicion) {\n  // si es verdadero\n} else {\n  // si es falso\n}", exampleExplanation: "Si la variable `x` es mayor que 10, se ejecuta el bloque de código A; de lo contrario, se ejecuta el bloque B." },
             { name: "for", category: "Estructuras de Control", explanation: "Bucle que se repite un número específico de veces. Ideal para iterar sobre una secuencia.", example: "for (int i = 0; i < 5; i++) {\n  Serial.println(i);\n}", sketch: "for (int i = 0; i < limite; i++) {\n  // código a repetir\n}", exampleExplanation: "Imprime los números del 0 al 4 en el Monitor Serie, uno en cada línea." },
             { name: "while", category: "Estructuras de Control", explanation: "Bucle que repite código mientras la condición sea verdadera. La condición se evalúa antes de cada iteración.", example: "while (digitalRead(2) == LOW) {\n  digitalWrite(13, HIGH);\n}", sketch: "while (condicion) {\n  // código a repetir\n}", exampleExplanation: "Mientras el botón en el pin 2 esté presionado (LOW), el LED del pin 13 se mantendrá encendido." },
             { name: "do...while", category: "Estructuras de Control", explanation: "Similar al bucle `while`, pero la condición se evalúa al final. El bloque de código se ejecuta al menos una vez.", example: "do {\n  x = x + 1;\n} while (x < 100);", sketch: "do {\n  // código a repetir (se ejecuta al menos una vez)\n} while (condicion);", exampleExplanation: "Incrementa `x` en 1. Esta acción se repetirá mientras `x` sea menor que 100, garantizando que el incremento ocurra como mínimo una vez." },
             { name: "switch...case", category: "Estructuras de Control", explanation: "Permite comparar una variable con múltiples valores (`case`). Es una alternativa más limpia a usar muchos `if...else if`.", example: "switch (sensorValue) {\n  case 200:\n    // acción A\n    break;\n  case 500:\n    // acción B\n    break;\n  default:\n    // acción por defecto\n    break;\n}", sketch: "switch (variable) {\n  case valor1:\n    // acción 1\n    break;\n  case valor2:\n    // acción 2\n    break;\n  default:\n    // si no coincide ninguno\n    break;\n}", exampleExplanation: "Ejecuta la acción A si `sensorValue` es 200, la acción B si es 500, o la acción por defecto si no coincide con ningún caso." },
-            
-            // E/S Digital
             { name: "pinMode()", category: "E/S Digital", explanation: "Configura un pin para que se comporte como entrada (`INPUT`), salida (`OUTPUT`), o entrada pull-up (`INPUT_PULLUP`).", example: "pinMode(8, OUTPUT);", sketch: "pinMode(pin, MODO);", exampleExplanation: "Configura el pin digital 8 como una salida, permitiendo enviar voltaje." },
             { name: "digitalWrite()", category: "E/S Digital", explanation: "Escribe un valor `HIGH` (5V) o `LOW` (0V) en un pin digital configurado como salida.", example: "digitalWrite(8, HIGH);", sketch: "digitalWrite(pin, VALOR);", exampleExplanation: "Envía 5V al pin 8, encendiendo el componente conectado." },
             { name: "digitalRead()", category: "E/S Digital", explanation: "Lee el valor de un pin digital, que será `HIGH` o `LOW`.", example: "int valorBoton = digitalRead(2);", sketch: "int valor = digitalRead(pin);", exampleExplanation: "Lee el estado del pin 2 (ej: un botón) y guarda el resultado en `valorBoton`." },
-            
-            // E/S Analógica
             { name: "analogRead()", category: "E/S Analógica", explanation: "Lee el valor de un pin de entrada analógica (A0, A1, etc.). Devuelve un entero entre 0 (0V) y 1023 (5V).", example: "int valorSensor = analogRead(A0);", sketch: "int valor = analogRead(pinAnalogico);", exampleExplanation: "Lee el voltaje en el pin A0, lo convierte a un número (0-1023) y lo guarda en `valorSensor`." },
             { name: "analogWrite()", category: "E/S Analógica", explanation: "Escribe un valor pseudo-analógico (PWM) en un pin PWM (~). El valor va de 0 a 255.", example: "analogWrite(9, 128);", sketch: "analogWrite(pinPWM, valor);", exampleExplanation: "Envía una señal PWM al pin 9 con un ciclo de trabajo del 50% (128 de 255)." },
-
-            // Sonido
             { name: "tone()", category: "Sonido", explanation: "Genera una onda cuadrada de una frecuencia específica (en Hercios) en un pin.", example: "tone(8, 440, 1000);", sketch: "tone(pin, frecuencia, duracion); // duracion es opcional", exampleExplanation: "Genera un tono de 440 Hz (nota 'La') en el pin 8 durante 1000 milisegundos." },
             { name: "noTone()", category: "Sonido", explanation: "Detiene la generación de la onda cuadrada iniciada por `tone()`.", example: "noTone(8);", sketch: "noTone(pin);", exampleExplanation: "Detiene el sonido que se está generando en el pin 8." },
-            
-            // Comunicación Serie
             { name: "Serial.begin()", category: "Comunicación Serie", explanation: "Inicia la comunicación serie y establece la velocidad en baudios.", example: "Serial.begin(9600);", sketch: "Serial.begin(velocidad);", exampleExplanation: "Configura el puerto serie para transmitir/recibir datos a 9600 bits por segundo." },
             { name: "Serial.print()", category: "Comunicación Serie", explanation: "Envía datos al puerto serie sin añadir un salto de línea al final.", example: "Serial.print(\"Valor: \");", sketch: "Serial.print(dato);", exampleExplanation: "Envía el texto 'Valor: ' sin saltar a la siguiente línea en el Monitor Serie." },
             { name: "Serial.println()", category: "Comunicación Serie", explanation: "Envía datos al puerto serie y añade un salto de línea al final.", example: "Serial.println(valorSensor);", sketch: "Serial.println(dato);", exampleExplanation: "Envía el valor de `valorSensor` al Monitor Serie y mueve el cursor a la siguiente línea." },
-            
-            // Funciones de Tiempo
             { name: "delay()", category: "Funciones de Tiempo", explanation: "Pausa el programa por un número específico de milisegundos.", example: "delay(1000);", sketch: "delay(milisegundos);", exampleExplanation: "Detiene la ejecución del programa durante 1000 milisegundos (1 segundo)." },
             { name: "millis()", category: "Funciones de Tiempo", explanation: "Devuelve los milisegundos transcurridos desde que el programa comenzó. Ideal para tareas temporizadas sin usar `delay()`.", example: "unsigned long tiempoActual = millis();", sketch: "unsigned long tiempo = millis();", exampleExplanation: "Guarda el tiempo actual en milisegundos desde el inicio en `tiempoActual`." },
-            
-            // Matemáticas
             { name: "map()", category: "Matemáticas", explanation: "Re-escala un número de un rango a otro.", example: "int brillo = map(analogRead(A0), 0, 1023, 0, 255);", sketch: "long nuevoValor = map(valor, desdeMin, desdeMax, haciaMin, haciaMax);", exampleExplanation: "Convierte un valor de A0 (0-1023) a una escala de 0-255 y lo guarda en `brillo`." },
             { name: "random()", category: "Matemáticas", explanation: "Genera un número pseudoaleatorio dentro de un rango.", example: "long numAleatorio = random(1, 101);", sketch: "long numAleatorio = random(min, max);", exampleExplanation: "Genera un número aleatorio entre 1 y 100 y lo guarda en `numAleatorio`." },
             { name: "min()", category: "Matemáticas", explanation: "Calcula el mínimo de dos números.", example: "int valor = min(lecturaSensor, 100);", sketch: "tipoDato resultado = min(valor1, valor2);", exampleExplanation: "Devuelve el valor más pequeño entre `lecturaSensor` y 100." },
             { name: "max()", category: "Matemáticas", explanation: "Calcula el máximo de dos números.", example: "int valor = max(lecturaSensor, 0);", sketch: "tipoDato resultado = max(valor1, valor2);", exampleExplanation: "Devuelve el valor más grande entre `lecturaSensor` y 0." },
-
-            // Calificadores de Variables
             { name: "const", category: "Calificadores de Variables", explanation: "Calificador que hace que una variable sea de 'solo lectura'.", example: "const int PIN_SENSOR = A0;", sketch: "const tipoDato NOMBRE_CONSTANTE = valor;", exampleExplanation: "Declara una constante entera `PIN_SENSOR`. Su valor no puede ser modificado." },
-
-            // Tipos de Variables
             { name: "int", category: "Tipos de Variables", explanation: "Tipo de dato para números enteros (sin decimales).", example: "int contador = 0;", sketch: "int nombreVariable = valor;", exampleExplanation: "Declara una variable entera 'contador' con valor 0." },
             { name: "unsigned int", category: "Tipos de Variables", explanation: "Entero sin signo. Almacena solo valores positivos.", example: "unsigned int tiempoEspera = 50000;", sketch: "unsigned int nombreVariable = valor;", exampleExplanation: "Almacena un valor grande y positivo que no cabría en un `int`." },
             { name: "long", category: "Tipos de Variables", explanation: "Entero largo. Utilizado para números enteros muy grandes.", example: "long numeroGrande = 90000L;", sketch: "long nombreVariable = valor;", exampleExplanation: "Declara una variable para almacenar un número entero grande." },
@@ -158,15 +136,25 @@
             let activeCategory = categories[1]; 
             let favorites = new Set(JSON.parse(localStorage.getItem('arduinoFavorites')) || []);
 
-            const sidebarWrapper = document.getElementById('sidebar-wrapper');
-            const hotspot = document.getElementById('sidebar-open-hotspot');
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar-wrapper');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
             const categoryNav = document.getElementById('category-nav').querySelector('ul');
             const commandsContainer = document.getElementById('commands-container');
             const searchBar = document.getElementById('search-bar');
 
-            hotspot.addEventListener('mouseenter', () => sidebarWrapper.classList.add('show'));
-            sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('show'));
-            
+            // --- Funcionalidad del menú móvil ---
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            };
+
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+
             const copyCodeToClipboard = (codeToCopy, button) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = codeToCopy;
@@ -204,98 +192,4 @@
                 }
             };
             
-            const renderCategories = () => {
-                categoryNav.innerHTML = '';
-                categories.forEach(category => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="#" class="block px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150 sidebar-item ${category === activeCategory ? 'active' : 'text-gray-600 hover:bg-gray-200'}">${category}</a>`;
-                    li.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        activeCategory = category;
-                        searchBar.value = '';
-                        renderCategories();
-                        renderCommands();
-                    });
-                    categoryNav.appendChild(li);
-                });
-            };
-
-            const renderCommands = () => {
-                const searchTerm = searchBar.value.toLowerCase();
-                let filteredCommands;
-
-                if (searchTerm) {
-                    filteredCommands = arduinoCommands.filter(cmd => 
-                        cmd.name.toLowerCase().includes(searchTerm) ||
-                        cmd.explanation.toLowerCase().includes(searchTerm) ||
-                        cmd.exampleExplanation.toLowerCase().includes(searchTerm)
-                    );
-                } else if (activeCategory === "⭐ Favoritos") {
-                    filteredCommands = arduinoCommands.filter(cmd => favorites.has(cmd.name));
-                } else {
-                    filteredCommands = arduinoCommands.filter(cmd => cmd.category === activeCategory);
-                }
-
-                commandsContainer.innerHTML = '';
-                if (filteredCommands.length === 0) {
-                    commandsContainer.innerHTML = `<div class="text-center py-12 px-4 bg-white rounded-lg card-shadow md:col-span-2 xl:col-span-3">
-                        <h3 class="text-xl font-semibold text-gray-700">No se encontraron resultados</h3>
-                        <p class="text-gray-500 mt-2">Intenta con otra búsqueda o añade comandos a tus favoritos.</p>
-                    </div>`;
-                    return;
-                }
-
-                filteredCommands.forEach(cmd => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white rounded-lg p-6 card-shadow flex flex-col';
-                    const isFavorited = favorites.has(cmd.name);
-                    
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="text-xl font-bold text-gray-800 fira-code pr-4">${cmd.name}</h3>
-                            <div class="flex space-x-2 shrink-0">
-                                <button class="action-btn copy-btn" title="Copiar boceto de código">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                </button>
-                                <button class="action-btn favorite-btn" title="Añadir/Quitar de favoritos">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 icon-favorite ${isFavorited ? 'favorited' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69L11.049 2.927z" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm">${cmd.explanation}</p>
-                        <div class="mt-4 flex-grow flex flex-col">
-                            <p class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Ejemplo de Uso:</p>
-                            <pre class="bg-gray-800 text-white p-4 rounded-md text-sm fira-code overflow-x-auto flex-grow">${cmd.example}</pre>
-                        </div>
-                        <div class="mt-4 bg-[#F8F4F0] p-4 rounded-md">
-                            <p class="text-xs font-semibold text-[#A35709] mb-2 uppercase tracking-wider">¿Qué hace el ejemplo?</p>
-                            <p class="text-sm text-gray-700">${cmd.exampleExplanation}</p>
-                        </div>
-                    `;
-                    
-                    const copyBtn = card.querySelector('.copy-btn');
-                    const favoriteBtn = card.querySelector('.favorite-btn');
-
-                    copyBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        copyCodeToClipboard(cmd.sketch, copyBtn);
-                    });
-                    favoriteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        toggleFavorite(cmd, favoriteBtn);
-                    });
-
-                    commandsContainer.appendChild(card);
-                });
-            };
-
-            searchBar.addEventListener('input', () => {
-                renderCommands();
-            });
-
-            renderCategories();
-            renderCommands();
-        });
-    </script>
-</body>
-</html>
+            const renderCategories = () =>
