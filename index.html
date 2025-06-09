@@ -3,301 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gym Tracker Pro</title>
+    <title>Guía Interactiva de Comandos de Arduino v2 (Copia Mejorada)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        .tag-input-container { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-        .tag { display: inline-flex; align-items: center; background-color: #e2e8f0; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.875rem; }
-        .tag-remove { margin-left: 0.25rem; cursor: pointer; }
-        .series-input { display: flex; flex-direction: column; gap: 0.5rem; }
-        .series-row { display: flex; gap: 0.5rem; align-items: center; }
-        .exercise-card:hover .exercise-actions { opacity: 1; }
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-        .fade-enter, .fade-leave-to { opacity: 0; }
-        @media (max-width: 640px) {
-            .mobile-stack { flex-direction: column; align-items: stretch; }
-            .mobile-full { width: 100%; }
-            .mobile-button-group { width: 100%; display: flex; justify-content: space-between; margin-top: 0.5rem; gap: 0.5rem;}
-            .session-action-buttons { justify-content: flex-end; }
+        body {
+            background-color: #FDFBF8;
+            font-family: 'Inter', sans-serif;
+            color: #4A4A4A;
         }
-        .filter-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #e2e8f0; }
-        .filter-item:last-child { border-bottom: none; }
-        .session-action-buttons { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap');
+        .fira-code {
+            font-family: 'Fira Code', monospace;
+        }
+        #sidebar-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar-wrapper.show {
+            transform: translateX(0);
+        }
+        #sidebar-open-hotspot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 100%;
+            z-index: 30;
+        }
+        .sidebar-item.active {
+            background-color: #EBE6E0;
+            color: #A35709;
+            font-weight: 700;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+        .search-bar:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #EBE6E0;
+        }
+        .action-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 9999px;
+            transition: background-color 0.2s;
+        }
+        .action-btn:hover {
+            background-color: #f0ebe5;
+        }
+        .action-btn .icon-favorite.favorited {
+            fill: #FFC700;
+            stroke: #FFC700;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl" id="app">
-        <!-- Header -->
-        <header class="mb-8">
-            <div class="flex items-center justify-between">
-                <div><h1 class="text-3xl font-bold text-indigo-700">Gym Tracker Pro</h1><p class="text-gray-600">Tu diario personal de entrenamiento</p></div>
-                <button @click="showMobileMenu = !showMobileMenu" class="md:hidden text-gray-600 hover:text-gray-800"><i class="fas fa-bars text-2xl"></i></button>
-            </div>
-            <!-- Mobile Menu -->
-            <div v-if="showMobileMenu" class="md:hidden mt-4 bg-white rounded-lg shadow p-4">
-                <button @click="currentTab = 'exercises'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'exercises', 'text-gray-700': currentTab !== 'exercises'}" class="w-full text-left px-4 py-2 rounded-md mb-2"><i class="fas fa-dumbbell mr-2"></i> Ejercicios</button>
-                <button @click="currentTab = 'sessions'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'sessions', 'text-gray-700': currentTab !== 'sessions'}" class="w-full text-left px-4 py-2 rounded-md mb-2"><i class="fas fa-running mr-2"></i> Sesiones</button>
-                <button @click="currentTab = 'history'; showMobileMenu = false" :class="{'bg-indigo-100 text-indigo-700': currentTab === 'history', 'text-gray-700': currentTab !== 'history'}" class="w-full text-left px-4 py-2 rounded-md"><i class="fas fa-history mr-2"></i> Historial</button>
-            </div>
-        </header>
-
-        <!-- Navigation Tabs (Desktop) -->
-        <div class="hidden md:flex border-b border-gray-200 mb-6">
-            <button @click="currentTab = 'exercises'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'exercises', 'text-gray-500 hover:text-gray-700': currentTab !== 'exercises'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-dumbbell mr-2"></i> Biblioteca</button>
-            <button @click="currentTab = 'sessions'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'sessions', 'text-gray-500 hover:text-gray-700': currentTab !== 'sessions'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-running mr-2"></i> Sesiones</button>
-            <button @click="currentTab = 'history'" :class="{'border-b-2 border-indigo-500 text-indigo-600': currentTab === 'history', 'text-gray-500 hover:text-gray-700': currentTab !== 'history'}" class="py-2 px-4 font-medium text-sm focus:outline-none"><i class="fas fa-history mr-2"></i> Historial</button>
-        </div>
-
-        <!-- Exercises Library -->
-        <div v-if="currentTab === 'exercises'" class="bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-6 mobile-stack">
-                <h2 class="text-xl font-semibold text-gray-800"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> Biblioteca</h2>
-                <div class="flex space-x-2 mobile-button-group">
-                     <button @click="showManageFiltersModal = true" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center text-sm"><i class="fas fa-filter mr-2"></i> Filtros</button>
-                    <button @click="showExerciseForm = true; editingExercise = null; resetExerciseForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center text-sm"><i class="fas fa-plus mr-2"></i> Nuevo</button>
-                </div>
-            </div>
-            <!-- Search and Filters -->
-            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="relative"><input v-model="exerciseSearch" type="text" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"><i class="fas fa-search absolute left-3 top-3 text-gray-400"></i></div>
-                <select v-model="exerciseMuscleFilter" class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">Todos los grupos</option><option v-for="muscle in availableMuscleGroups" :key="muscle" :value="muscle">{{ muscle }}</option></select>
-                <select v-model="exerciseTypeFilter" class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">Todos los tipos</option><option v-for="type in availableExerciseTypes" :key="type" :value="type">{{ type }}</option></select>
-            </div>
-            <!-- Exercises List -->
-            <div v-if="filteredExercises.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div v-for="exercise in filteredExercises" :key="exercise.id" class="exercise-card border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow relative">
-                    <div class="exercise-actions absolute top-2 right-2 opacity-0 transition-opacity"><button @click="editExercise(exercise)" class="text-indigo-600 hover:text-indigo-800 mr-2" title="Editar"><i class="fas fa-edit"></i></button><button @click="deleteExercise(exercise.id)" class="text-red-600 hover:text-red-800" title="Eliminar"><i class="fas fa-trash"></i></button></div>
-                    <h3 class="font-semibold text-lg text-gray-800">{{ exercise.name }}</h3>
-                    <div class="flex flex-wrap gap-2 mt-2 mb-3"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ exercise.type || 'Sin tipo' }}</span><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ exercise.muscleGroup || 'Sin grupo' }}</span><span v-if="exercise.requiresWeight" class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Peso</span></div>
-                    <p class="text-gray-600 text-sm">{{ exercise.description || 'Sin descripción' }}</p>
-                </div>
-            </div>
-            <div v-else class="text-center py-8 text-gray-500">No hay ejercicios.</div>
-        </div>
-
-        <!-- Exercise Form Modal -->
-        <div v-if="showExerciseForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800">{{ editingExercise ? 'Editar Ejercicio' : 'Nuevo Ejercicio' }}</h3><button @click="showExerciseForm = false" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
-                    <div class="space-y-4">
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label><input v-model="exerciseForm.name" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: Press de Banca"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label><textarea v-model="exerciseForm.description" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Notas..."></textarea></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label><div class="tag-input-container mb-2"><div v-for="(tag, index) in exerciseForm.typeTags" :key="`type-${index}`" class="tag">{{ tag }}<span @click="removeTypeTag(index)" class="tag-remove"><i class="fas fa-times"></i></span></div><input v-model="newTypeTag" @keydown.enter.prevent="addTypeTag" type="text" class="flex-1 border-0 border-b border-gray-300 focus:ring-0 focus:border-indigo-500 px-0 py-1 text-sm" placeholder="Añadir y Enter"><button @click.prevent="addTypeTag" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus"></i></button></div><select v-model="exerciseForm.type" class="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="" disabled>Selecciona o crea</option><option v-for="type in availableExerciseTypes" :key="type" :value="type">{{ type }}</option><option value="" v-if="!availableExerciseTypes.length" disabled>No hay tipos</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Grupo Muscular</label><div class="tag-input-container mb-2"><div v-for="(tag, index) in exerciseForm.muscleTags" :key="`muscle-${index}`" class="tag">{{ tag }}<span @click="removeMuscleTag(index)" class="tag-remove"><i class="fas fa-times"></i></span></div><input v-model="newMuscleTag" @keydown.enter.prevent="addMuscleTag" type="text" class="flex-1 border-0 border-b border-gray-300 focus:ring-0 focus:border-indigo-500 px-0 py-1 text-sm" placeholder="Añadir y Enter"><button @click.prevent="addMuscleTag" class="text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus"></i></button></div><select v-model="exerciseForm.muscleGroup" class="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="" disabled>Selecciona o crea</option><option v-for="muscle in availableMuscleGroups" :key="muscle" :value="muscle">{{ muscle }}</option><option value="" v-if="!availableMuscleGroups.length" disabled>No hay grupos</option></select></div>
-                        <div class="flex items-center"><input v-model="exerciseForm.requiresWeight" type="checkbox" id="requiresWeight" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"><label for="requiresWeight" class="ml-2 block text-sm text-gray-700">Requiere peso</label></div>
-                    </div>
-                    <div class="mt-6 flex justify-end space-x-3"><button @click="showExerciseForm = false" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button><button @click="saveExercise" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700">Guardar</button></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manage Filters Modal -->
-        <div v-if="showManageFiltersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-filter mr-2"></i> Gestionar Filtros</h3><button @click="showManageFiltersModal = false" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Tipos de Ejercicio</h4><div v-if="availableExerciseTypes.length > 0" class="space-y-1 max-h-60 overflow-y-auto pr-2"><div v-for="type in availableExerciseTypes" :key="`filter-type-${type}`" class="filter-item"><span class="text-sm">{{ type }}</span><button @click="deleteFilterOption('type', type)" class="text-red-500 hover:text-red-700" title="Eliminar"><i class="fas fa-trash-alt fa-xs"></i></button></div></div><p v-else class="text-sm text-gray-500 italic">No hay tipos.</p></div>
-                        <div><h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Grupos Musculares</h4><div v-if="availableMuscleGroups.length > 0" class="space-y-1 max-h-60 overflow-y-auto pr-2"><div v-for="muscle in availableMuscleGroups" :key="`filter-muscle-${muscle}`" class="filter-item"><span class="text-sm">{{ muscle }}</span><button @click="deleteFilterOption('muscle', muscle)" class="text-red-500 hover:text-red-700" title="Eliminar"><i class="fas fa-trash-alt fa-xs"></i></button></div></div><p v-else class="text-sm text-gray-500 italic">No hay grupos.</p></div>
-                    </div>
-                     <p class="mt-4 text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i> Eliminar desasignará la opción de los ejercicios.</p>
-                    <div class="mt-6 flex justify-end"><button @click="showManageFiltersModal = false" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700">Cerrar</button></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Training Sessions -->
-        <div v-if="currentTab === 'sessions'" class="bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-6 mobile-stack">
-                <h2 class="text-xl font-semibold text-gray-800"><i :class="isEditingSession ? 'fas fa-edit' : 'fas fa-running'" class="mr-2 text-indigo-600"></i>{{ isEditingSession ? 'Editando Sesión' : 'Sesión Actual' }}</h2>
-                <button @click="startNewSession" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center mobile-full justify-center" :disabled="currentSession !== null" :class="{'opacity-50 cursor-not-allowed': currentSession !== null}"><i class="fas fa-plus mr-2"></i> Nueva Sesión</button>
-            </div>
-            <!-- Current Session (Creación o Edición) -->
-            <div v-if="currentSession" class="mb-8 border border-gray-200 rounded-lg p-4">
-                <div class="flex justify-between items-center mb-4 mobile-stack">
-                    <h3 class="font-semibold text-lg text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i>Sesión del {{ formatDate(currentSession.date) }}</h3>
-                    <div class="mobile-button-group">
-                        <button @click="saveSession" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm mr-2"><i class="fas fa-save mr-1"></i> {{ isEditingSession ? 'Actualizar' : 'Guardar' }}</button>
-                        <button @click="cancelSession" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm"><i class="fas fa-times mr-1"></i> Cancelar</button>
-                    </div>
-                </div>
-                <div class="mb-6"><label class="block text-sm font-medium text-gray-700 mb-2"><i class="fas fa-plus-circle mr-1 text-indigo-600"></i> Agregar ejercicio</label><div class="flex gap-2 mobile-stack"><select v-model="selectedExerciseToAdd" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 mobile-full"><option value="" disabled selected>Selecciona</option><option v-for="exercise in sortedExercises" :key="exercise.id" :value="exercise.id">{{ exercise.name }}</option></select><button @click="addExerciseToSession" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md mobile-full justify-center flex items-center" :disabled="!selectedExerciseToAdd" :class="{'opacity-50 cursor-not-allowed': !selectedExerciseToAdd}"><i class="fas fa-plus mr-2"></i> Agregar</button></div></div>
-                <div v-if="currentSession.exercises.length > 0" class="space-y-4">
-                    <div v-for="(sessionExercise, index) in currentSession.exercises" :key="sessionExercise.exerciseId + '-' + index" class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex justify-between items-center mb-2"><h4 class="font-medium text-gray-800"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(sessionExercise.exerciseId).name }}</h4><button @click="removeExerciseFromSession(index)" class="text-red-600 hover:text-red-800" title="Quitar"><i class="fas fa-trash"></i></button></div>
-                        <div v-if="getExerciseById(sessionExercise.exerciseId).requiresWeight" class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-list-ol mr-1 text-indigo-600"></i> Series (reps x peso)</label>
-                            <div class="series-input"><div v-for="(set, setIndex) in sessionExercise.sets" :key="setIndex" class="series-row"><span class="text-sm text-gray-600 w-6">#{{ setIndex + 1 }}</span><input v-model.number="set.reps" type="number" min="1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Reps"><span class="text-gray-500">x</span><input v-model.number="set.weight" type="number" min="0" step="0.1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Kg"><button @click="removeSet(index, setIndex)" class="text-red-500 hover:text-red-700 ml-2" title="Eliminar"><i class="fas fa-times"></i></button></div></div>
-                            <button @click="addSet(index)" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm flex items-center"><i class="fas fa-plus mr-1"></i> Serie</button>
-                        </div>
-                        <div v-else class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-list-ol mr-1 text-indigo-600"></i> Series y reps</label>
-                            <div class="series-input"><div v-for="(set, setIndex) in sessionExercise.sets" :key="setIndex" class="series-row"><span class="text-sm text-gray-600 w-6">#{{ setIndex + 1 }}</span><input v-model.number="set.reps" type="number" min="1" class="w-16 border border-gray-300 rounded-md px-2 py-1 text-sm" placeholder="Reps"><button @click="removeSet(index, setIndex)" class="text-red-500 hover:text-red-700 ml-2" title="Eliminar"><i class="fas fa-times"></i></button></div></div>
-                            <button @click="addSet(index)" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm flex items-center"><i class="fas fa-plus mr-1"></i> Serie</button>
-                        </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1"><i class="fas fa-sticky-note mr-1 text-indigo-600"></i> Notas</label><textarea v-model="sessionExercise.notes" rows="2" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="..."></textarea></div>
-                    </div>
-                </div>
-                <div v-else class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay ejercicios.</div>
-            </div>
-            <!-- Previous Sessions -->
-            <div v-if="sessions.length > 0 && !currentSession">
-                <h3 class="font-semibold text-lg text-gray-800 mb-4"><i class="fas fa-clock-rotate-left mr-2 text-indigo-600"></i> Sesiones recientes</h3>
-                <div class="space-y-4">
-                    <div v-for="session in sortedSessions.slice(0, 3)" :key="session.id" class="flex items-center gap-3">
-                        <div class="flex-grow border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer" @click="viewSessionDetails(session.id)">
-                            <div class="flex justify-between items-center"><span class="font-medium"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Sesión del {{ formatDate(session.date) }}</span><span class="text-sm text-gray-500">{{ session.exercises.length }} ej.</span></div>
-                        </div>
-                        <div class="session-action-buttons"><button @click.stop="editSession(session.id)" class="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-100" title="Editar"><i class="fas fa-edit fa-sm"></i></button><button @click.stop="deleteSession(session.id)" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100" title="Eliminar"><i class="fas fa-trash-alt fa-sm"></i></button></div>
-                    </div>
-                </div>
-                 <button v-if="sessions.length > 3" @click="currentTab = 'history'" class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm">Ver historial completo <i class="fas fa-arrow-right ml-1"></i></button>
-            </div>
-             <div v-if="sessions.length === 0 && !currentSession" class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay sesiones guardadas.</div>
-        </div>
-
-        <!-- Training History -->
-        <div v-if="currentTab === 'history'" class="bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-6 mobile-stack"><h2 class="text-xl font-semibold text-gray-800"><i class="fas fa-history mr-2 text-indigo-600"></i> Historial</h2><div class="flex items-center space-x-2 mobile-full justify-end"><label for="historyFilter" class="text-sm text-gray-700">Filtrar:</label><select v-model="historyFilter" id="historyFilter" class="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="all">Todos</option><option value="last7">7 días</option><option value="last30">30 días</option></select></div></div>
-            <div v-if="filteredSessions.length > 0" class="space-y-4">
-                <div v-for="session in filteredSessions" :key="session.id" class="flex items-center gap-3">
-                    <div class="flex-grow border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" @click="viewSessionDetails(session.id)">
-                        <div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Sesión del {{ formatDate(session.date) }}</h3><span class="text-sm text-gray-500">{{ session.exercises.length }} ej.</span></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mt-3">
-                            <div v-for="exercise in session.exercises.slice(0, 4)" :key="exercise.exerciseId" class="text-sm"><p class="font-medium truncate" :title="getExerciseById(exercise.exerciseId).name"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(exercise.exerciseId).name }}</p><p class="text-gray-600 truncate">{{ exercise.sets.length }}x <span v-for="(set, index) in exercise.sets" :key="index">{{ set.reps }}{{ getExerciseById(exercise.exerciseId).requiresWeight && set.weight !== null ? `x${set.weight}kg` : '' }}{{ index < exercise.sets.length - 1 ? ', ' : '' }}</span></p></div>
-                             <div v-if="session.exercises.length > 4" class="text-sm text-gray-500 md:col-span-2">... y {{ session.exercises.length - 4 }} más</div>
-                        </div>
-                    </div>
-                    <div class="session-action-buttons"><button @click.stop="editSession(session.id)" class="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-100" title="Editar"><i class="fas fa-edit fa-sm"></i></button><button @click.stop="deleteSession(session.id)" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100" title="Eliminar"><i class="fas fa-trash-alt fa-sm"></i></button></div>
-                </div>
-            </div>
-            <div v-else class="text-center py-8 text-gray-500"><i class="fas fa-info-circle mr-2"></i> No hay sesiones.</div>
-        </div>
-
-        <!-- Session Details Modal -->
-        <div v-if="viewingSession" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-calendar-day mr-2 text-indigo-600"></i> Detalles Sesión {{ formatDate(viewingSession.date) }}</h3><button @click="viewingSession = null" class="text-gray-400 hover:text-gray-500"><i class="fas fa-times"></i></button></div>
-                    <div class="space-y-4">
-                        <div v-for="exercise in viewingSession.exercises" :key="exercise.exerciseId" class="border border-gray-200 rounded-lg p-4">
-                            <h4 class="font-medium text-gray-800 mb-2"><i class="fas fa-dumbbell mr-2 text-indigo-600"></i> {{ getExerciseById(exercise.exerciseId).name }}</h4>
-                            <div class="mb-3"><div class="flex flex-wrap gap-2 mb-2"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ getExerciseById(exercise.exerciseId).type || '-' }}</span><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ getExerciseById(exercise.exerciseId).muscleGroup || '-' }}</span><span v-if="getExerciseById(exercise.exerciseId).requiresWeight" class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Peso</span></div><div class="grid grid-cols-3 gap-2 text-sm font-medium text-gray-700 border-b pb-1 mb-1"><div>Serie</div><div>Reps</div><div v-if="getExerciseById(exercise.exerciseId).requiresWeight">Peso (kg)</div><div v-else></div></div><div v-for="(set, index) in exercise.sets" :key="index" class="grid grid-cols-3 gap-2 text-sm mt-1"><div class="text-gray-600">#{{ index + 1 }}</div><div class="text-gray-600">{{ set.reps ?? '-' }}</div><div v-if="getExerciseById(exercise.exerciseId).requiresWeight" class="text-gray-600">{{ set.weight ?? '-' }}</div><div v-else></div></div></div>
-                            <div v-if="exercise.notes" class="mt-2 pt-2 border-t"><p class="text-sm font-medium text-gray-700 mb-1"><i class="fas fa-sticky-note mr-1 text-indigo-600"></i> Notas:</p><p class="text-sm text-gray-600 whitespace-pre-wrap">{{ exercise.notes }}</p></div>
-                            <div v-else class="mt-2 pt-2 border-t"><p class="text-sm text-gray-500 italic">Sin notas.</p></div>
-                        </div>
-                    </div>
-                    <div class="mt-6 flex justify-end"><button @click="viewingSession = null" class="px-4 py-2 bg-indigo-600 rounded-md text-sm font-medium text-white hover:bg-indigo-700"><i class="fas fa-times mr-1"></i> Cerrar</button></div>
-                </div>
-            </div>
-        </div>
+<body class="antialiased">
+    
+    <div id="sidebar-open-hotspot"></div>
+    
+    <div id="sidebar-wrapper">
+        <aside class="w-64 bg-[#F8F4F0] p-6 border-r border-gray-200 h-full overflow-y-auto">
+            <h1 class="text-2xl font-bold text-[#A35709] mb-8">Arduino<span class="font-light">DevRef</span></h1>
+            <nav id="category-nav">
+                <h2 class="text-xs font-bold uppercase text-gray-500 mb-3">Categorías</h2>
+                <ul class="space-y-2">
+                    </ul>
+            </nav>
+        </aside>
     </div>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <main class="flex-1 p-4 md:p-8 lg:p-10 transition-all duration-300">
+        <div class="max-w-7xl mx-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Guía de Comandos</h2>
+                <p class="text-gray-500 mt-2">Una referencia interactiva para Arduino. Pasa el cursor por el borde izquierdo para ver las categorías.</p>
+                <div class="mt-6 relative">
+                    <input type="text" id="search-bar" placeholder="Busca por nombre o describe lo que quieres hacer..." class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white transition-shadow duration-200 search-bar">
+                    <svg class="w-5 h-5 text-gray-400 absolute top-1/2 right-4 transform -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </header>
+
+            <div id="commands-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                </div>
+        </div>
+    </main>
+
     <script>
-        const { createApp, ref, computed, onMounted, watch } = Vue;
+        const arduinoCommands = [
+            // Estructura Básica
+            { name: "void setup()", category: "Estructura Básica", explanation: "Función que se ejecuta una sola vez al inicio del programa. Se usa para inicializar variables, configurar pines y empezar a usar librerías.", example: "void setup() {\n  Serial.begin(9600);\n  pinMode(13, OUTPUT);\n}", sketch: "void setup() {\n  // tu código de configuración aquí\n}", exampleExplanation: "Inicia la comunicación serie a 9600 baudios y configura el pin digital 13 como una salida." },
+            { name: "void loop()", category: "Estructura Básica", explanation: "Función que se ejecuta continuamente después de `setup()`. Es el corazón del programa, donde se aloja la lógica principal.", example: "void loop() {\n  digitalWrite(13, HIGH);\n  delay(1000);\n  digitalWrite(13, LOW);\n  delay(1000);\n}", sketch: "void loop() {\n  // tu código principal aquí\n}", exampleExplanation: "Enciende el LED del pin 13, espera 1 segundo, lo apaga, espera otro segundo y repite el ciclo." },
+            { name: "#include", category: "Estructura Básica", explanation: "Directiva que se usa para incluir librerías externas en tu sketch, como la de un sensor específico o para controlar un motor.", example: "#include <Servo.h>", sketch: "#include <Libreria.h>", exampleExplanation: "Incluye la librería `Servo.h`, necesaria para controlar servomotores." },
+            { name: "#define", category: "Estructura Básica", explanation: "Directiva que permite definir constantes. El compilador reemplazará cualquier mención de esta constante por el valor definido.", example: "#define LED_PIN 13", sketch: "#define NOMBRE_CONSTANTE valor", exampleExplanation: "Define una constante llamada `LED_PIN` con el valor 13. En el código, `LED_PIN` será reemplazado por 13." },
+            
+            // Estructuras de Control
+            { name: "if...else", category: "Estructuras de Control", explanation: "Ejecuta un bloque de código si la condición es verdadera (`true`), y otro bloque si es falsa (`false`).", example: "if (x > 10) {\n  // bloque de código A\n} else {\n  // bloque de código B\n}", sketch: "if (condicion) {\n  // si es verdadero\n} else {\n  // si es falso\n}", exampleExplanation: "Si la variable `x` es mayor que 10, se ejecuta el bloque de código A; de lo contrario, se ejecuta el bloque B." },
+            { name: "for", category: "Estructuras de Control", explanation: "Bucle que se repite un número específico de veces. Ideal para iterar sobre una secuencia.", example: "for (int i = 0; i < 5; i++) {\n  Serial.println(i);\n}", sketch: "for (int i = 0; i < limite; i++) {\n  // código a repetir\n}", exampleExplanation: "Imprime los números del 0 al 4 en el Monitor Serie, uno en cada línea." },
+            { name: "while", category: "Estructuras de Control", explanation: "Bucle que repite código mientras la condición sea verdadera. La condición se evalúa antes de cada iteración.", example: "while (digitalRead(2) == LOW) {\n  digitalWrite(13, HIGH);\n}", sketch: "while (condicion) {\n  // código a repetir\n}", exampleExplanation: "Mientras el botón en el pin 2 esté presionado (LOW), el LED del pin 13 se mantendrá encendido." },
+            { name: "do...while", category: "Estructuras de Control", explanation: "Similar al bucle `while`, pero la condición se evalúa al final. El bloque de código se ejecuta al menos una vez.", example: "do {\n  x = x + 1;\n} while (x < 100);", sketch: "do {\n  // código a repetir (se ejecuta al menos una vez)\n} while (condicion);", exampleExplanation: "Incrementa `x` en 1. Esta acción se repetirá mientras `x` sea menor que 100, garantizando que el incremento ocurra como mínimo una vez." },
+            { name: "switch...case", category: "Estructuras de Control", explanation: "Permite comparar una variable con múltiples valores (`case`). Es una alternativa más limpia a usar muchos `if...else if`.", example: "switch (sensorValue) {\n  case 200:\n    // acción A\n    break;\n  case 500:\n    // acción B\n    break;\n  default:\n    // acción por defecto\n    break;\n}", sketch: "switch (variable) {\n  case valor1:\n    // acción 1\n    break;\n  case valor2:\n    // acción 2\n    break;\n  default:\n    // si no coincide ninguno\n    break;\n}", exampleExplanation: "Ejecuta la acción A si `sensorValue` es 200, la acción B si es 500, o la acción por defecto si no coincide con ningún caso." },
+            
+            // E/S Digital
+            { name: "pinMode()", category: "E/S Digital", explanation: "Configura un pin para que se comporte como entrada (`INPUT`), salida (`OUTPUT`), o entrada pull-up (`INPUT_PULLUP`).", example: "pinMode(8, OUTPUT);", sketch: "pinMode(pin, MODO);", exampleExplanation: "Configura el pin digital 8 como una salida, permitiendo enviar voltaje." },
+            { name: "digitalWrite()", category: "E/S Digital", explanation: "Escribe un valor `HIGH` (5V) o `LOW` (0V) en un pin digital configurado como salida.", example: "digitalWrite(8, HIGH);", sketch: "digitalWrite(pin, VALOR);", exampleExplanation: "Envía 5V al pin 8, encendiendo el componente conectado." },
+            { name: "digitalRead()", category: "E/S Digital", explanation: "Lee el valor de un pin digital, que será `HIGH` o `LOW`.", example: "int valorBoton = digitalRead(2);", sketch: "int valor = digitalRead(pin);", exampleExplanation: "Lee el estado del pin 2 (ej: un botón) y guarda el resultado en `valorBoton`." },
+            
+            // E/S Analógica
+            { name: "analogRead()", category: "E/S Analógica", explanation: "Lee el valor de un pin de entrada analógica (A0, A1, etc.). Devuelve un entero entre 0 (0V) y 1023 (5V).", example: "int valorSensor = analogRead(A0);", sketch: "int valor = analogRead(pinAnalogico);", exampleExplanation: "Lee el voltaje en el pin A0, lo convierte a un número (0-1023) y lo guarda en `valorSensor`." },
+            { name: "analogWrite()", category: "E/S Analógica", explanation: "Escribe un valor pseudo-analógico (PWM) en un pin PWM (~). El valor va de 0 a 255.", example: "analogWrite(9, 128);", sketch: "analogWrite(pinPWM, valor);", exampleExplanation: "Envía una señal PWM al pin 9 con un ciclo de trabajo del 50% (128 de 255)." },
 
-        let defaultExerciseTypes = ['Fuerza', 'Cardio', 'Flexibilidad', 'Hipertrofia', 'Resistencia'];
-        let defaultMuscleGroups = ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Piernas', 'Glúteos', 'Abdomen', 'Full Body'];
-        const savedDefaultTypes = localStorage.getItem('gymTrackerDefaultTypes');
-        const savedDefaultMuscles = localStorage.getItem('gymTrackerDefaultMuscles');
-        if (savedDefaultTypes) defaultExerciseTypes = JSON.parse(savedDefaultTypes);
-        if (savedDefaultMuscles) defaultMuscleGroups = JSON.parse(savedDefaultMuscles);
+            // Sonido
+            { name: "tone()", category: "Sonido", explanation: "Genera una onda cuadrada de una frecuencia específica (en Hercios) en un pin.", example: "tone(8, 440, 1000);", sketch: "tone(pin, frecuencia, duracion); // duracion es opcional", exampleExplanation: "Genera un tono de 440 Hz (nota 'La') en el pin 8 durante 1000 milisegundos." },
+            { name: "noTone()", category: "Sonido", explanation: "Detiene la generación de la onda cuadrada iniciada por `tone()`.", example: "noTone(8);", sketch: "noTone(pin);", exampleExplanation: "Detiene el sonido que se está generando en el pin 8." },
+            
+            // Comunicación Serie
+            { name: "Serial.begin()", category: "Comunicación Serie", explanation: "Inicia la comunicación serie y establece la velocidad en baudios.", example: "Serial.begin(9600);", sketch: "Serial.begin(velocidad);", exampleExplanation: "Configura el puerto serie para transmitir/recibir datos a 9600 bits por segundo." },
+            { name: "Serial.print()", category: "Comunicación Serie", explanation: "Envía datos al puerto serie sin añadir un salto de línea al final.", example: "Serial.print(\"Valor: \");", sketch: "Serial.print(dato);", exampleExplanation: "Envía el texto 'Valor: ' sin saltar a la siguiente línea en el Monitor Serie." },
+            { name: "Serial.println()", category: "Comunicación Serie", explanation: "Envía datos al puerto serie y añade un salto de línea al final.", example: "Serial.println(valorSensor);", sketch: "Serial.println(dato);", exampleExplanation: "Envía el valor de `valorSensor` al Monitor Serie y mueve el cursor a la siguiente línea." },
+            
+            // Funciones de Tiempo
+            { name: "delay()", category: "Funciones de Tiempo", explanation: "Pausa el programa por un número específico de milisegundos.", example: "delay(1000);", sketch: "delay(milisegundos);", exampleExplanation: "Detiene la ejecución del programa durante 1000 milisegundos (1 segundo)." },
+            { name: "millis()", category: "Funciones de Tiempo", explanation: "Devuelve los milisegundos transcurridos desde que el programa comenzó. Ideal para tareas temporizadas sin usar `delay()`.", example: "unsigned long tiempoActual = millis();", sketch: "unsigned long tiempo = millis();", exampleExplanation: "Guarda el tiempo actual en milisegundos desde el inicio en `tiempoActual`." },
+            
+            // Matemáticas
+            { name: "map()", category: "Matemáticas", explanation: "Re-escala un número de un rango a otro.", example: "int brillo = map(analogRead(A0), 0, 1023, 0, 255);", sketch: "long nuevoValor = map(valor, desdeMin, desdeMax, haciaMin, haciaMax);", exampleExplanation: "Convierte un valor de A0 (0-1023) a una escala de 0-255 y lo guarda en `brillo`." },
+            { name: "random()", category: "Matemáticas", explanation: "Genera un número pseudoaleatorio dentro de un rango.", example: "long numAleatorio = random(1, 101);", sketch: "long numAleatorio = random(min, max);", exampleExplanation: "Genera un número aleatorio entre 1 y 100 y lo guarda en `numAleatorio`." },
+            { name: "min()", category: "Matemáticas", explanation: "Calcula el mínimo de dos números.", example: "int valor = min(lecturaSensor, 100);", sketch: "tipoDato resultado = min(valor1, valor2);", exampleExplanation: "Devuelve el valor más pequeño entre `lecturaSensor` y 100." },
+            { name: "max()", category: "Matemáticas", explanation: "Calcula el máximo de dos números.", example: "int valor = max(lecturaSensor, 0);", sketch: "tipoDato resultado = max(valor1, valor2);", exampleExplanation: "Devuelve el valor más grande entre `lecturaSensor` y 0." },
 
-        createApp({
-            setup() {
-                const currentTab = ref('exercises');
-                const exercises = ref([]);
-                const sessions = ref([]);
-                const currentSession = ref(null);
-                const viewingSession = ref(null);
-                const showExerciseForm = ref(false);
-                const showManageFiltersModal = ref(false);
-                const editingExercise = ref(null);
-                const selectedExerciseToAdd = ref('');
-                const exerciseSearch = ref('');
-                const exerciseMuscleFilter = ref('');
-                const exerciseTypeFilter = ref('');
-                const newTypeTag = ref('');
-                const newMuscleTag = ref('');
-                const historyFilter = ref('all');
-                const showMobileMenu = ref(false);
-                const availableExerciseTypes = ref([...defaultExerciseTypes]);
-                const availableMuscleGroups = ref([...defaultMuscleGroups]);
-                const initialExerciseForm = { id: null, name: '', description: '', type: '', typeTags: [], muscleGroup: '', muscleTags: [], requiresWeight: false };
-                const exerciseForm = ref({ ...initialExerciseForm });
+            // Calificadores de Variables
+            { name: "const", category: "Calificadores de Variables", explanation: "Calificador que hace que una variable sea de 'solo lectura'.", example: "const int PIN_SENSOR = A0;", sketch: "const tipoDato NOMBRE_CONSTANTE = valor;", exampleExplanation: "Declara una constante entera `PIN_SENSOR`. Su valor no puede ser modificado." },
 
-                const loadData = () => { /* ... (igual) ... */ const sDT=localStorage.getItem('gymTrackerDefaultTypes'); const sDM=localStorage.getItem('gymTrackerDefaultMuscles'); if(sDT)defaultExerciseTypes=JSON.parse(sDT); if(sDM)defaultMuscleGroups=JSON.parse(sDM); const sE=localStorage.getItem('gymTrackerExercises'); const sS=localStorage.getItem('gymTrackerSessions'); if(sE)exercises.value=JSON.parse(sE); if(sS)sessions.value=JSON.parse(sS).map(s=>({...s, date:new Date(s.date)})); if(exercises.value.length===0&&!sE)initializeSampleExercises(); if(sessions.value.length===0&&!sS)initializeSampleSessions(); sortSessions(); updateFilterOptions(); };
-                const saveData = () => { /* ... (igual) ... */ localStorage.setItem('gymTrackerExercises',JSON.stringify(exercises.value)); localStorage.setItem('gymTrackerSessions',JSON.stringify(sessions.value)); localStorage.setItem('gymTrackerDefaultTypes',JSON.stringify(defaultExerciseTypes)); localStorage.setItem('gymTrackerDefaultMuscles',JSON.stringify(defaultMuscleGroups)); };
-                const initializeSampleExercises = () => { /* ... (igual) ... */ exercises.value=[{id:'1',name:'Press Banca',type:'Fuerza',muscleGroup:'Pecho',requiresWeight:true},{id:'2',name:'Sentadilla',type:'Hipertrofia',muscleGroup:'Piernas',requiresWeight:true},{id:'3',name:'Dominadas',type:'Fuerza',muscleGroup:'Espalda',requiresWeight:false},{id:'4',name:'Curl Bíceps',type:'Hipertrofia',muscleGroup:'Bíceps',requiresWeight:true},{id:'5',name:'Plancha',type:'Resistencia',muscleGroup:'Abdomen',requiresWeight:false}]; };
-                const initializeSampleSessions = () => { /* ... (igual) ... */ sessions.value=[{id:'s1',date:new Date(Date.now()-2*864e5),exercises:[{exerciseId:'1',sets:[{reps:10,weight:60},{reps:8,weight:65}],notes:'Ok'},{exerciseId:'4',sets:[{reps:12,weight:12}],notes:''}]},{id:'s2',date:new Date(Date.now()-5*864e5),exercises:[{exerciseId:'2',sets:[{reps:12,weight:70}],notes:''},{exerciseId:'3',sets:[{reps:8}],notes:''}]}]; };
-                const updateFilterOptions = () => { /* ... (igual) ... */ const uT=[...new Set(exercises.value.map(e=>e.type).filter(Boolean))]; const uM=[...new Set(exercises.value.map(e=>e.muscleGroup).filter(Boolean))]; availableExerciseTypes.value=[...new Set([...defaultExerciseTypes,...uT])].sort(); availableMuscleGroups.value=[...new Set([...defaultMuscleGroups,...uM])].sort(); };
+            // Tipos de Variables
+            { name: "int", category: "Tipos de Variables", explanation: "Tipo de dato para números enteros (sin decimales).", example: "int contador = 0;", sketch: "int nombreVariable = valor;", exampleExplanation: "Declara una variable entera 'contador' con valor 0." },
+            { name: "unsigned int", category: "Tipos de Variables", explanation: "Entero sin signo. Almacena solo valores positivos.", example: "unsigned int tiempoEspera = 50000;", sketch: "unsigned int nombreVariable = valor;", exampleExplanation: "Almacena un valor grande y positivo que no cabría en un `int`." },
+            { name: "long", category: "Tipos de Variables", explanation: "Entero largo. Utilizado para números enteros muy grandes.", example: "long numeroGrande = 90000L;", sketch: "long nombreVariable = valor;", exampleExplanation: "Declara una variable para almacenar un número entero grande." },
+            { name: "float", category: "Tipos de Variables", explanation: "Tipo de dato para números de punto flotante (con decimales).", example: "float pi = 3.14159;", sketch: "float nombreVariable = valor;", exampleExplanation: "Declara una variable flotante 'pi' con su valor." },
+            { name: "bool", category: "Tipos de Variables", explanation: "Tipo de dato booleano que solo puede tener dos valores: `true` o `false`.", example: "bool estado = false;", sketch: "bool nombreVariable = true; // o false", exampleExplanation: "Declara una variable booleana 'estado' y la inicializa como falsa." },
+            { name: "char", category: "Tipos de Variables", explanation: "Tipo de dato que almacena un valor de carácter (comillas simples).", example: "char miLetra = 'A';", sketch: "char nombreVariable = 'c';", exampleExplanation: "Declara una variable de carácter 'miLetra' y le asigna 'A'." },
+            { name: "String", category: "Tipos de Variables", explanation: "Clase para manipular cadenas de texto (comillas dobles).", example: "String mensaje = \"Hola Mundo\";", sketch: "String nombreVariable = \"texto\";", exampleExplanation: "Crea un objeto String para almacenar una cadena de texto." },
+            { name: "array", category: "Tipos de Variables", explanation: "Una colección de variables del mismo tipo, accesibles por un índice.", example: "int misPines[3] = {2, 4, 8};", sketch: "tipoDato nombreArray[tamano] = {elem1, elem2, ...};", exampleExplanation: "Crea un arreglo `misPines` que contiene tres enteros." }
+        ];
 
-                const filteredExercises = computed(() => exercises.value.filter(ex => (ex.name.toLowerCase().includes(exerciseSearch.value.toLowerCase()) || ex.description?.toLowerCase().includes(exerciseSearch.value.toLowerCase())) && (!exerciseMuscleFilter.value || ex.muscleGroup === exerciseMuscleFilter.value) && (!exerciseTypeFilter.value || ex.type === exerciseTypeFilter.value)).sort((a, b) => a.name.localeCompare(b.name)));
-                const sortedExercises = computed(() => [...exercises.value].sort((a, b) => a.name.localeCompare(b.name)));
-                const sortedSessions = computed(() => [...sessions.value].sort((a, b) => new Date(b.date) - new Date(a.date)));
-                const filteredSessions = computed(() => { const n=new Date(); let c; const b=sortedSessions.value; switch(historyFilter.value){ case 'last7': c=new Date(n.getTime()-7*864e5); return b.filter(s=>new Date(s.date)>=c); case 'last30': c=new Date(n.getTime()-30*864e5); return b.filter(s=>new Date(s.date)>=c); default: return b; } });
-                const isEditingSession = computed(() => currentSession.value !== null && sessions.value.some(s => s.id === currentSession.value.id));
+        document.addEventListener('DOMContentLoaded', () => {
+            const categories = ["⭐ Favoritos", ...new Set(arduinoCommands.map(cmd => cmd.category))];
+            let activeCategory = categories[1]; 
+            let favorites = new Set(JSON.parse(localStorage.getItem('arduinoFavorites')) || []);
 
-                const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-                const formatDate = (date) => { if (!date) return ''; const d = typeof date === 'string' ? new Date(date) : date; return isNaN(d) ? '' : d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }); };
-                const getExerciseById = (id) => exercises.value.find(ex => ex.id === id) || { id: null, name: 'Ejercicio no encontrado', type: '', muscleGroup: '', requiresWeight: false };
+            const sidebarWrapper = document.getElementById('sidebar-wrapper');
+            const hotspot = document.getElementById('sidebar-open-hotspot');
+            const categoryNav = document.getElementById('category-nav').querySelector('ul');
+            const commandsContainer = document.getElementById('commands-container');
+            const searchBar = document.getElementById('search-bar');
 
-                const resetExerciseForm = () => { /* ... (igual) ... */ exerciseForm.value={...initialExerciseForm, typeTags:[], muscleTags:[]}; newTypeTag.value=''; newMuscleTag.value=''; };
-                const editExercise = (exercise) => { /* ... (igual) ... */ editingExercise.value=exercise; exerciseForm.value={id:exercise.id, name:exercise.name, description:exercise.description||'', type:exercise.type||'', typeTags:exercise.type?[exercise.type]:[], muscleGroup:exercise.muscleGroup||'', muscleTags:exercise.muscleGroup?[exercise.muscleGroup]:[], requiresWeight:exercise.requiresWeight}; newTypeTag.value=''; newMuscleTag.value=''; showExerciseForm.value=true; };
-                const deleteExercise = (id) => { const name=getExerciseById(id)?.name||''; if(confirm(`¿Eliminar "${name}"?`)){ const used=sessions.value.some(s=>s.exercises.some(e=>e.exerciseId===id)); if(used&&!confirm(`"${name}" se usa en sesiones. ¿Eliminar igual?`))return; exercises.value=exercises.value.filter(e=>e.id!==id); saveData(); updateFilterOptions(); /* ALERTA QUITADA */ } };
-                const saveExercise = () => { if(!exerciseForm.value.name.trim()){alert('Nombre?');return;} if(!exerciseForm.value.type){alert('Tipo?');return;} if(!exerciseForm.value.muscleGroup){alert('Grupo?');return;} const ex={id:editingExercise.value?editingExercise.value.id:generateId(), name:exerciseForm.value.name.trim(), description:exerciseForm.value.description.trim(), type:exerciseForm.value.type, muscleGroup:exerciseForm.value.muscleGroup, requiresWeight:exerciseForm.value.requiresWeight}; if(editingExercise.value){const i=exercises.value.findIndex(e=>e.id===editingExercise.value.id); if(i!==-1)exercises.value.splice(i,1,ex);}else exercises.value.push(ex); showExerciseForm.value=false; editingExercise.value=null; resetExerciseForm(); saveData(); updateFilterOptions(); /* ALERTA QUITADA */ };
-                const addTypeTag = () => { /* ... (igual) ... */ const t=newTypeTag.value.trim(); if(t&&!exerciseForm.value.typeTags.includes(t)){ exerciseForm.value.typeTags.push(t); if(!availableExerciseTypes.value.includes(t)){availableExerciseTypes.value.push(t); availableExerciseTypes.value.sort();} exerciseForm.value.type=t; newTypeTag.value='';} else if(t){exerciseForm.value.type=t; newTypeTag.value='';} };
-                const removeTypeTag = (index) => { /* ... (igual) ... */ const r=exerciseForm.value.typeTags[index]; exerciseForm.value.typeTags.splice(index,1); if(exerciseForm.value.type===r)exerciseForm.value.type=''; };
-                const addMuscleTag = () => { /* ... (igual) ... */ const t=newMuscleTag.value.trim(); if(t&&!exerciseForm.value.muscleTags.includes(t)){ exerciseForm.value.muscleTags.push(t); if(!availableMuscleGroups.value.includes(t)){availableMuscleGroups.value.push(t); availableMuscleGroups.value.sort();} exerciseForm.value.muscleGroup=t; newMuscleTag.value='';} else if(t){exerciseForm.value.muscleGroup=t; newMuscleTag.value='';} };
-                const removeMuscleTag = (index) => { /* ... (igual) ... */ const r=exerciseForm.value.muscleTags[index]; exerciseForm.value.muscleTags.splice(index,1); if(exerciseForm.value.muscleGroup===r)exerciseForm.value.muscleGroup=''; };
+            hotspot.addEventListener('mouseenter', () => sidebarWrapper.classList.add('show'));
+            sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('show'));
+            
+            const copyCodeToClipboard = (codeToCopy, button) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = codeToCopy;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    const originalIcon = button.innerHTML;
+                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
+                    setTimeout(() => {
+                        button.innerHTML = originalIcon;
+                    }, 1500);
+                } catch (err) {
+                    console.error('No se pudo copiar el texto', err);
+                }
+                document.body.removeChild(textArea);
+            };
+            
+            const toggleFavorite = (cmd, favButton) => {
+                const isFavorited = favorites.has(cmd.name);
+                if (isFavorited) {
+                    favorites.delete(cmd.name);
+                } else {
+                    favorites.add(cmd.name);
+                }
+                localStorage.setItem('arduinoFavorites', JSON.stringify([...favorites]));
+                
+                const icon = favButton.querySelector('.icon-favorite');
+                icon.classList.toggle('favorited', !isFavorited);
 
-                const sortSessions = () => { sessions.value.sort((a, b) => new Date(b.date) - new Date(a.date)); };
-                const startNewSession = () => { currentSession.value = { id: generateId(), date: new Date(), exercises: [] }; selectedExerciseToAdd.value = ''; };
-                const editSession = (sessionId) => { const sessionToEdit = sessions.value.find(s => s.id === sessionId); if (sessionToEdit) { currentSession.value = JSON.parse(JSON.stringify(sessionToEdit)); currentSession.value.date = new Date(currentSession.value.date); currentTab.value = 'sessions'; selectedExerciseToAdd.value = ''; window.scrollTo(0, 0); } else { alert("Error: Sesión no encontrada."); } };
-                const saveSession = () => {
-                    if (!currentSession.value || currentSession.value.exercises.length === 0) { alert('Añade ejercicios.'); return; }
-                    let valid = true; /* ... validación ... */ if (!valid) return;
-                    const sessionDataToSave = currentSession.value;
-                    const editing = isEditingSession.value;
-                    if (editing) {
-                        const index = sessions.value.findIndex(s => s.id === sessionDataToSave.id);
-                        if (index !== -1) { sessions.value.splice(index, 1, sessionDataToSave); /* ALERTA QUITADA */ }
-                        else { alert('Error al actualizar.'); return; }
-                    } else {
-                        sessions.value.unshift(sessionDataToSave); /* ALERTA QUITADA */
-                    }
-                    sortSessions(); currentSession.value = null; saveData();
-                };
-                const cancelSession = () => { const msg=isEditingSession.value?'¿Descartar cambios?':'¿Cancelar nueva sesión?'; if(confirm(msg)) currentSession.value = null; };
-                const deleteSession = (sessionId) => { const date=formatDate(sessions.value.find(s=>s.id===sessionId)?.date); if(confirm(`¿Eliminar sesión del ${date}?`)){ sessions.value=sessions.value.filter(s=>s.id!==sessionId); saveData(); /* ALERTA QUITADA */ if(viewingSession.value?.id===sessionId)viewingSession.value=null; } };
-                const addExerciseToSession = () => { /* ... (igual) ... */ if(!selectedExerciseToAdd.value)return; const ex=getExerciseById(selectedExerciseToAdd.value); if(!ex?.id)return; currentSession.value.exercises.push({exerciseId:ex.id, sets:[{reps:null, weight:ex.requiresWeight?null:null}], notes:''}); selectedExerciseToAdd.value=''; };
-                const removeExerciseFromSession = (index) => { /* ... (igual) ... */ if(confirm(`¿Quitar "${getExerciseById(currentSession.value.exercises[index].exerciseId).name}"?`))currentSession.value.exercises.splice(index,1); };
-                const addSet = (exIndex) => { /* ... (igual) ... */ const ex=getExerciseById(currentSession.value.exercises[exIndex].exerciseId); currentSession.value.exercises[exIndex].sets.push({reps:null, weight:ex.requiresWeight?null:null}); };
-                const removeSet = (exIndex, setIndex) => { /* ... (igual) ... */ if(currentSession.value.exercises[exIndex].sets.length>1)currentSession.value.exercises[exIndex].sets.splice(setIndex,1); else alert("No puedes eliminar la única serie."); };
-                const viewSessionDetails = (sessionId) => { /* ... (igual) ... */ viewingSession.value = sessions.value.find(s => s.id === sessionId) || null; };
+                if (activeCategory === "⭐ Favoritos") {
+                    renderCommands(); 
+                }
+            };
+            
+            const renderCategories = () => {
+                categoryNav.innerHTML = '';
+                categories.forEach(category => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#" class="block px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150 sidebar-item ${category === activeCategory ? 'active' : 'text-gray-600 hover:bg-gray-200'}">${category}</a>`;
+                    li.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        activeCategory = category;
+                        searchBar.value = '';
+                        renderCategories();
+                        renderCommands();
+                    });
+                    categoryNav.appendChild(li);
+                });
+            };
 
-                const deleteFilterOption = (filterType, value) => { const list=filterType==='type'?availableExerciseTypes:availableMuscleGroups; const defaultList=filterType==='type'?defaultExerciseTypes:defaultMuscleGroups; const field=filterType==='type'?'type':'muscleGroup'; const typeName=filterType==='type'?'tipo':'grupo'; if(list.value.length<=1){alert(`No puedes eliminar el último ${typeName}.`); return;} if(confirm(`¿Eliminar ${typeName} "${value}"?\nSe desasignará de los ejercicios.`)){ exercises.value=exercises.value.map(ex=>{if(ex[field]===value)return{...ex,[field]:''}; return ex;}); list.value=list.value.filter(item=>item!==value); const defaultIndex=defaultList.indexOf(value); if(defaultIndex>-1)defaultList.splice(defaultIndex,1); if(filterType==='type'&&exerciseTypeFilter.value===value)exerciseTypeFilter.value=''; if(filterType==='muscle'&&exerciseMuscleFilter.value===value)exerciseMuscleFilter.value=''; if(showExerciseForm.value&&exerciseForm.value[field]===value)exerciseForm.value[field]=''; saveData(); /* ALERTA QUITADA */ } };
+            const renderCommands = () => {
+                const searchTerm = searchBar.value.toLowerCase();
+                let filteredCommands;
 
-                onMounted(loadData);
-                watch(availableExerciseTypes, (newList) => { if (exerciseTypeFilter.value && !newList.includes(exerciseTypeFilter.value)) exerciseTypeFilter.value = ''; });
-                watch(availableMuscleGroups, (newList) => { if (exerciseMuscleFilter.value && !newList.includes(exerciseMuscleFilter.value)) exerciseMuscleFilter.value = ''; });
+                if (searchTerm) {
+                    filteredCommands = arduinoCommands.filter(cmd => 
+                        cmd.name.toLowerCase().includes(searchTerm) ||
+                        cmd.explanation.toLowerCase().includes(searchTerm) ||
+                        cmd.exampleExplanation.toLowerCase().includes(searchTerm)
+                    );
+                } else if (activeCategory === "⭐ Favoritos") {
+                    filteredCommands = arduinoCommands.filter(cmd => favorites.has(cmd.name));
+                } else {
+                    filteredCommands = arduinoCommands.filter(cmd => cmd.category === activeCategory);
+                }
 
-                return {
-                    currentTab, exercises, sessions, currentSession, viewingSession, showExerciseForm, showManageFiltersModal,
-                    editingExercise, selectedExerciseToAdd, exerciseSearch, exerciseMuscleFilter, exerciseTypeFilter,
-                    availableExerciseTypes, availableMuscleGroups, exerciseForm, newTypeTag, newMuscleTag, historyFilter, showMobileMenu,
-                    filteredExercises, sortedExercises, sortedSessions, filteredSessions, isEditingSession,
-                    formatDate, getExerciseById, resetExerciseForm, editExercise, deleteExercise, saveExercise,
-                    addTypeTag, removeTypeTag, addMuscleTag, removeMuscleTag, startNewSession, saveSession,
-                    cancelSession, deleteSession, editSession,
-                    addExerciseToSession, removeExerciseFromSession, addSet, removeSet,
-                    viewSessionDetails, updateFilterOptions, deleteFilterOption
-                };
-            }
-        }).mount('#app');
+                commandsContainer.innerHTML = '';
+                if (filteredCommands.length === 0) {
+                    commandsContainer.innerHTML = `<div class="text-center py-12 px-4 bg-white rounded-lg card-shadow md:col-span-2 xl:col-span-3">
+                        <h3 class="text-xl font-semibold text-gray-700">No se encontraron resultados</h3>
+                        <p class="text-gray-500 mt-2">Intenta con otra búsqueda o añade comandos a tus favoritos.</p>
+                    </div>`;
+                    return;
+                }
+
+                filteredCommands.forEach(cmd => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg p-6 card-shadow flex flex-col';
+                    const isFavorited = favorites.has(cmd.name);
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-xl font-bold text-gray-800 fira-code pr-4">${cmd.name}</h3>
+                            <div class="flex space-x-2 shrink-0">
+                                <button class="action-btn copy-btn" title="Copiar boceto de código">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                </button>
+                                <button class="action-btn favorite-btn" title="Añadir/Quitar de favoritos">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 icon-favorite ${isFavorited ? 'favorited' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.05 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69L11.049 2.927z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm">${cmd.explanation}</p>
+                        <div class="mt-4 flex-grow flex flex-col">
+                            <p class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Ejemplo de Uso:</p>
+                            <pre class="bg-gray-800 text-white p-4 rounded-md text-sm fira-code overflow-x-auto flex-grow">${cmd.example}</pre>
+                        </div>
+                        <div class="mt-4 bg-[#F8F4F0] p-4 rounded-md">
+                            <p class="text-xs font-semibold text-[#A35709] mb-2 uppercase tracking-wider">¿Qué hace el ejemplo?</p>
+                            <p class="text-sm text-gray-700">${cmd.exampleExplanation}</p>
+                        </div>
+                    `;
+                    
+                    const copyBtn = card.querySelector('.copy-btn');
+                    const favoriteBtn = card.querySelector('.favorite-btn');
+
+                    copyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        copyCodeToClipboard(cmd.sketch, copyBtn);
+                    });
+                    favoriteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFavorite(cmd, favoriteBtn);
+                    });
+
+                    commandsContainer.appendChild(card);
+                });
+            };
+
+            searchBar.addEventListener('input', () => {
+                renderCommands();
+            });
+
+            renderCategories();
+            renderCommands();
+        });
     </script>
 </body>
 </html>
